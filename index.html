@@ -3191,7 +3191,7 @@
             </div>
             <div class="report-card" onclick="runReport('inventory')">
               <div class="report-icon">📦</div>
-              <div class="report-title">الجرد الشامل </div>
+              <div class="report-title">تقرير المخزون</div>
               <div class="report-desc">حركة المخزون والتنبيهات</div>
             </div>
 
@@ -8455,34 +8455,162 @@
         const profit = rev - cost;
         const fuelSales = filtered.filter(s=>s.type==='fuel');
         const prodSales = filtered.filter(s=>s.type==='product');
+
+        // ── تجميع مبيعات الوقود من الورديات (الطريقة الأدق) ──
+        const closedShiftsSales = (DB.shiftEntries||[]).filter(e => {
+          if (e.status !== 'closed') return false;
+          const d = e.endTime ? e.endTime.slice(0,10) : '';
+          return d >= from && d <= toRaw;
+        });
+        const fuelByTypeSales = {};
+        let totalFuelLitersSales = 0, totalFuelRevSales = 0;
+        closedShiftsSales.forEach(e => {
+          const pump = (DB.pumps||[]).find(p=>p.id===e.pumpId);
+          if (!pump?.nozzles) return;
+          pump.nozzles.forEach(nz => {
+            const snap = e.fuelPriceSnapshot?.[nz.fuelId];
+            const fuel = snap || (DB.fuels||[]).find(f=>f.id==nz.fuelId);
+            if (!fuel) return;
+            const net = (e.nozzleEnd?.[nz.id]??0)-(e.nozzleStart?.[nz.id]??0)-(((e.nozzleAdj?.[nz.id]??e.nozzleAdjTemp?.[nz.id])??0));
+            if (net<=0) return;
+            const sellPrice = fuel.sell || 0;
+            const rev2 = net * sellPrice;
+            totalFuelLitersSales += net;
+            totalFuelRevSales += rev2;
+            const key = nz.fuelId;
+            const fuelName = fuel.name || `وقود ${key}`;
+            if (!fuelByTypeSales[key]) fuelByTypeSales[key] = { name: fuelName, liters: 0, rev: 0, price: sellPrice };
+            fuelByTypeSales[key].liters += net;
+            fuelByTypeSales[key].rev += rev2;
+          });
+        });
+
+        // ── تجميع مبيعات المنتجات ──
+        const prodByNameSales = {};
+        let totalProdQtySales = 0, totalProdRevSales = 0;
+        prodSales.forEach(s=>{
+          if (!prodByNameSales[s.name]) prodByNameSales[s.name]={qty:0,rev:0,price:s.price||0};
+          prodByNameSales[s.name].qty += s.qty;
+          prodByNameSales[s.name].rev += s.total;
+          totalProdQtySales += s.qty;
+          totalProdRevSales += s.total;
+        });
+
+        // ── بناء صفوف جدول الوقود المجمّع ──
+        const fuelTypeRowsSales = Object.values(fuelByTypeSales).map(f=>`<tr>
+          <td><span style="font-size:18px;">⛽</span> <strong>${f.name}</strong></td>
+          <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:2})} لتر</td>
+          <td style="font-family:var(--mono);color:var(--text2)">${fN(f.price)} ج/ل</td>
+          <td style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px">${fN(f.rev)} ج</td>
+        </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">لا توجد مبيعات وقود في هذه الفترة</td></tr>';
+
+        // ── بناء صفوف جدول المنتجات المجمّع ──
+        const prodTypeRowsSales = Object.entries(prodByNameSales).map(([name,v])=>`<tr>
+          <td><span style="font-size:16px;">📦</span> <strong>${name}</strong></td>
+          <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${v.qty}</td>
+          <td style="font-family:var(--mono);color:var(--text2)">${fN(v.price)} ج</td>
+          <td style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px">${fN(v.rev)} ج</td>
+        </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">لا توجد مبيعات منتجات في هذه الفترة</td></tr>';
+
         out.innerHTML = `
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+          <!-- بطاقات الملخص العام -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
             <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text3)">صافي الربح</div>
+              <div style="font-size:11px;color:var(--text3)">💰 صافي الربح</div>
               <div style="font-size:20px;font-weight:800;color:var(--green);font-family:var(--mono)">${fN(profit)} ج</div>
             </div>
             <div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text3)">إجمالي الإيرادات</div>
-              <div style="font-size:20px;font-weight:800;color:var(--accent2);font-family:var(--mono)">${fN(rev)} ج</div>
+              <div style="font-size:11px;color:var(--text3)">📊 إجمالي الإيرادات</div>
+              <div style="font-size:20px;font-weight:800;color:var(--accent2);font-family:var(--mono)">${fN(totalFuelRevSales + totalProdRevSales)} ج</div>
             </div>
             <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text3)">مبيعات الوقود</div>
-              <div style="font-size:20px;font-weight:800;color:var(--amber);font-family:var(--mono)">${fuelSales.length}</div>
+              <div style="font-size:11px;color:var(--text3)">⛽ إجمالي لترات الوقود</div>
+              <div style="font-size:20px;font-weight:800;color:var(--amber);font-family:var(--mono)">${totalFuelLitersSales.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</div>
             </div>
             <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:14px;text-align:center">
-              <div style="font-size:11px;color:var(--text3)">مبيعات المنتجات</div>
-              <div style="font-size:20px;font-weight:800;color:var(--purple);font-family:var(--mono)">${prodSales.length}</div>
+              <div style="font-size:11px;color:var(--text3)">📦 إيراد المنتجات</div>
+              <div style="font-size:20px;font-weight:800;color:var(--purple);font-family:var(--mono)">${fN(totalProdRevSales)} ج</div>
             </div>
           </div>
-          <table class="tbl"><thead><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الربح</th><th>التاريخ</th></tr></thead>
-          <tbody>${filtered.map(s=>`<tr>
-            <td>${s.type==='fuel'?'⛽':'📦'} ${s.name}</td>
-            <td style="font-family:var(--mono)">${s.qty}</td>
-            <td style="font-family:var(--mono)">${fN(s.price)} ج</td>
-            <td style="font-family:var(--mono);color:var(--accent2);font-weight:700">${fN(s.total)} ج</td>
-            <td style="font-family:var(--mono);color:var(--green)">${fN(s.total-(s.cost||0)*s.qty)} ج</td>
-            <td style="font-size:12px;color:var(--text3)">${fDate(s.date)}</td>
-          </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">لا توجد مبيعات في هذه الفترة</td></tr>'}</tbody></table>`;
+
+          <!-- جدول إجمالي الوقود حسب النوع -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header" style="background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.02))">
+              ⛽ إجمالي مبيعات الوقود حسب النوع
+              <span style="font-size:11px;color:var(--text3);font-weight:400;margin-right:8px">(${from} → ${toRaw})</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>نوع الوقود</th>
+                    <th>الكمية المباعة</th>
+                    <th>سعر اللتر</th>
+                    <th>الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${fuelTypeRowsSales}
+                  <tr style="background:var(--amber-dim);font-weight:900;border-top:2px solid rgba(245,158,11,.3)">
+                    <td style="font-size:13px;font-weight:800">⛽ إجمالي الوقود</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber)">${totalFuelLitersSales.toLocaleString('ar-EG',{maximumFractionDigits:0})} لتر</td>
+                    <td>—</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:15px">${fN(totalFuelRevSales)} ج</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- جدول إجمالي المنتجات حسب الصنف -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header" style="background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(139,92,246,.02))">
+              📦 إجمالي مبيعات المنتجات حسب الصنف
+              <span style="font-size:11px;color:var(--text3);font-weight:400;margin-right:8px">(${from} → ${toRaw})</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>الكمية المباعة</th>
+                    <th>سعر الوحدة</th>
+                    <th>الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${prodTypeRowsSales}
+                  ${Object.keys(prodByNameSales).length > 0 ? `<tr style="background:var(--purple-dim);font-weight:900;border-top:2px solid rgba(139,92,246,.3)">
+                    <td style="font-size:13px;font-weight:800">📦 إجمالي المنتجات</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--purple)">${totalProdQtySales} وحدة</td>
+                    <td>—</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:15px">${fN(totalProdRevSales)} ج</td>
+                  </tr>` : ''}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- جدول تفاصيل جميع المبيعات -->
+          <div class="card">
+            <div class="card-header">
+              📋 تفاصيل المبيعات
+              <span style="font-size:11px;color:var(--text3);font-weight:400;margin-right:8px">${filtered.length} سجل</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>الربح</th><th>التاريخ</th></tr></thead>
+                <tbody>${filtered.map(s=>`<tr>
+                  <td>${s.type==='fuel'?'⛽':'📦'} ${s.name}</td>
+                  <td style="font-family:var(--mono)">${s.qty}</td>
+                  <td style="font-family:var(--mono)">${fN(s.price)} ج</td>
+                  <td style="font-family:var(--mono);color:var(--accent2);font-weight:700">${fN(s.total)} ج</td>
+                  <td style="font-family:var(--mono);color:var(--green)">${fN(s.total-(s.cost||0)*s.qty)} ج</td>
+                  <td style="font-size:12px;color:var(--text3)">${fDate(s.date)}</td>
+                </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">لا توجد مبيعات في هذه الفترة</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>`;
       }
 
       // ── تفاصيل وردية ──
@@ -10737,7 +10865,7 @@
         // Update deliver button label
         const deliverBtn = document.getElementById(`seDeliverBtn_${pumpId}`);
         if (deliverBtn) {
-          deliverBtn.textContent = `✅ فرق الكاش ${fN(actualCash)} ج `;
+          deliverBtn.textContent = `✅ أودّ المبلغ — ${fN(actualCash)} ج (المفتلم)`;
         }
 
         // Auto-save values to open entry
