@@ -3191,7 +3191,7 @@
             </div>
             <div class="report-card" onclick="runReport('inventory')">
               <div class="report-icon">📦</div>
-              <div class="report-title">تقرير المخزون</div>
+              <div class="report-title">الجرد الشامل </div>
               <div class="report-desc">حركة المخزون والتنبيهات</div>
             </div>
 
@@ -3209,6 +3209,11 @@
               <div class="report-icon">💨</div>
               <div class="report-title" style="color:var(--purple)">تقرير البخر</div>
               <div class="report-desc">نسبة البخر الشهرية لكل نوع وقود (معلوماتي فقط)</div>
+            </div>
+            <div class="report-card" onclick="runReport('calibrations')" style="border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.06);">
+              <div class="report-icon">⚖️</div>
+              <div class="report-title" style="color:var(--amber);">تقرير تجميع العيارات</div>
+              <div class="report-desc">إجمالي العيارات المسجلة في كل وردية خلال الفترة المحددة</div>
             </div>
           </div>
         </div>
@@ -4093,6 +4098,78 @@
           >
             إلغاء</button
           ><button class="btn btn-primary" onclick="addFuel()">✅ حفظ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Fuel Modal -->
+    <div class="modal-overlay" id="editFuelModal">
+      <div class="modal" style="width:520px">
+        <div class="modal-header">✏️ تعديل الخزان / نوع الوقود<button class="modal-close" onclick="closeModal('editFuelModal')">✕</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="efId">
+          <div class="form-group">
+            <label class="form-label">اسم الوقود / الخزان</label>
+            <input type="text" class="form-input" id="efName" placeholder="مثال: بنزين 95">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">سعة الخزان (لتر)</label>
+              <input type="number" class="form-input" id="efCapacity">
+            </div>
+            <div class="form-group">
+              <label class="form-label">المستوى الحالي (لتر)</label>
+              <input type="number" class="form-input" id="efStock">
+            </div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">الحد الأدنى للتنبيه</label>
+              <input type="number" class="form-input" id="efMinStock">
+            </div>
+            <div class="form-group">
+              <label class="form-label">سعر الشراء (ج/ل)</label>
+              <input type="number" class="form-input" id="efCost" step="0.25">
+            </div>
+            <div class="form-group">
+              <label class="form-label">سعر البيع (ج/ل)</label>
+              <input type="number" class="form-input" id="efSell" step="0.25">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">نسبة البخر (%)</label>
+              <input type="number" class="form-input" id="efEvap" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">أيقونة</label>
+              <input type="text" class="form-input" id="efIcon" maxlength="2">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('editFuelModal')">إلغاء</button>
+          <button class="btn btn-primary" onclick="saveEditFuel()">💾 حفظ التعديلات</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Pump Modal -->
+    <div class="modal-overlay" id="editPumpModal">
+      <div class="modal" style="width:500px">
+        <div class="modal-header">✏️ تعديل الطلمبة<button class="modal-close" onclick="closeModal('editPumpModal')">✕</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="epId">
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">اسم / رقم الطلمبة</label>
+            <input type="text" class="form-input" id="epName" placeholder="مثال: طلمبة 1">
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">المسدسات</div>
+          <div id="epNozzles"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('editPumpModal')">إلغاء</button>
+          <button class="btn btn-primary" onclick="saveEditPump()">💾 حفظ التعديلات</button>
         </div>
       </div>
     </div>
@@ -6533,6 +6610,7 @@
             <td style="font-family:var(--mono)">${f.cost} ج / ${f.sell} ج</td>
             <td><span class="tag tag-amber">${f.evapRate}%</span></td>
             <td>
+                <button class="btn btn-sm btn-secondary" onclick="openEditFuel(${f.id})" style="margin-left:4px;">✏️ تعديل</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteFuel(${f.id})">حذف</button>
             </td>
         </tr>`;
@@ -6581,6 +6659,83 @@
         renderFuelSetup();
       }
 
+      function openEditFuel(id) {
+        const f = DB.fuels.find(x => x.id === id);
+        if (!f) return;
+        document.getElementById('efId').value = f.id;
+        document.getElementById('efName').value = f.name;
+        document.getElementById('efCapacity').value = f.capacity || 0;
+        document.getElementById('efStock').value = f.stock || 0;
+        document.getElementById('efMinStock').value = f.minStock || 0;
+        document.getElementById('efCost').value = f.cost || 0;
+        document.getElementById('efSell').value = f.sell || 0;
+        document.getElementById('efEvap').value = f.evapRate || 0;
+        document.getElementById('efIcon').value = f.icon || '⛽';
+        openModal('editFuelModal');
+      }
+
+      function saveEditFuel() {
+        const id = parseInt(document.getElementById('efId').value);
+        const f = DB.fuels.find(x => x.id === id);
+        if (!f) return;
+        const newName = document.getElementById('efName').value.trim();
+        if (!newName) return toast('أدخل اسم الوقود/الخزان', 'error');
+        const oldSell = f.sell;
+        f.name        = newName;
+        f.capacity    = parseFloat(document.getElementById('efCapacity').value) || 0;
+        f.stock       = parseFloat(document.getElementById('efStock').value) || 0;
+        f.minStock    = parseFloat(document.getElementById('efMinStock').value) || 0;
+        f.cost        = parseFloat(document.getElementById('efCost').value) || 0;
+        f.sell        = parseFloat(document.getElementById('efSell').value) || 0;
+        f.evapRate    = parseFloat(document.getElementById('efEvap').value) || 0;
+        f.icon        = document.getElementById('efIcon').value || '⛽';
+        saveDB();
+        closeModal('editFuelModal');
+        renderFuelSetup();
+        const priceChanged = Math.abs(oldSell - f.sell) > 0.001;
+        toast(`✅ تم تحديث ${f.name}` + (priceChanged ? ` — سعر البيع تغير من ${oldSell} إلى ${f.sell} ج` : ''), 'success');
+      }
+
+      function openEditPump(id) {
+        const p = DB.pumps.find(x => x.id === id);
+        if (!p) return;
+        const fuelOptions = DB.fuels.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+        let nozzlesHtml = (p.nozzles || []).map((nz, i) => `
+          <div style="display:grid;grid-template-columns:80px 1fr 120px;gap:8px;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;font-size:13px;color:var(--text2);">${nz.label}</div>
+            <select class="form-input form-select" id="epNzFuel_${nz.id}" style="font-size:13px;">
+              ${DB.fuels.map(f => `<option value="${f.id}" ${f.id==nz.fuelId?'selected':''}>${f.name}</option>`).join('')}
+            </select>
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:3px;">العداد الحالي</div>
+              <input type="number" class="form-input" id="epNzCounter_${nz.id}" value="${nz.counter||0}" step="0.001" style="font-family:var(--mono);text-align:center;">
+            </div>
+          </div>`).join('');
+        document.getElementById('epId').value = id;
+        document.getElementById('epName').value = p.name;
+        document.getElementById('epNozzles').innerHTML = nozzlesHtml;
+        openModal('editPumpModal');
+      }
+
+      function saveEditPump() {
+        const id = parseInt(document.getElementById('epId').value);
+        const p = DB.pumps.find(x => x.id === id);
+        if (!p) return;
+        const newName = document.getElementById('epName').value.trim();
+        if (!newName) return toast('أدخل اسم الطلمبة', 'error');
+        p.name = newName;
+        (p.nozzles || []).forEach(nz => {
+          const fuelEl = document.getElementById(`epNzFuel_${nz.id}`);
+          const counterEl = document.getElementById(`epNzCounter_${nz.id}`);
+          if (fuelEl) nz.fuelId = parseInt(fuelEl.value);
+          if (counterEl) nz.counter = parseFloat(counterEl.value) || 0;
+        });
+        saveDB();
+        closeModal('editPumpModal');
+        renderFuelSetup();
+        toast(`✅ تم تحديث بيانات ${p.name}`, 'success');
+      }
+
       function renderPumpsTab() {
         renderNewPumpNozzleRows();
         const container = document.getElementById("pumpsListContainer");
@@ -6597,6 +6752,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
                     <span style="font-size:12px; color:var(--text3);">${p.nozzlesCount} مسدس</span>
+                    <button class="btn btn-sm btn-secondary" style="padding:4px 10px;" onclick="openEditPump(${p.id})">✏️ تعديل</button>
                     <button class="btn btn-sm btn-danger" style="padding: 4px 10px;" onclick="deletePump(${p.id})">حذف</button>
                 </div>
             </div>
@@ -7512,6 +7668,7 @@
         purchases: '🛒 تقرير المشتريات',
         evap:      '💨 تقرير البخر',
         shifts: '🔄 تقرير الورديات',
+        calibrations: '⚖️ تقرير تجميع العيارات',
       };
 
       function runReport(type) {
@@ -7635,52 +7792,69 @@
             return d >= from && d <= toRaw;
           });
 
-          // حساب ربح الوقود من الورديات (إيراد - تكلفة)
+          // حساب ربح الوقود من الورديات (إيراد - تكلفة) — باستخدام السعر المحفوظ وقت الإغلاق
           let fuelRev = 0, fuelCostTotal = 0;
           const fuelByType = {};
           closedShifts.forEach(e => {
             const pump = (DB.pumps||[]).find(p => p.id === e.pumpId);
             if (!pump || !pump.nozzles) return;
             pump.nozzles.forEach(nz => {
-              const fuel = (DB.fuels||[]).find(f => f.id == nz.fuelId);
+              // استخدم snapshot لو موجود، وإلا fallback للسعر الحالي
+              const snap = e.fuelPriceSnapshot?.[nz.fuelId];
+              const fuel = snap || (DB.fuels||[]).find(f => f.id == nz.fuelId);
               if (!fuel) return;
-              const net = (e.nozzleEnd?.[nz.id]??0) - (e.nozzleStart?.[nz.id]??0) - (e.nozzleAdj?.[nz.id]??0);
+              const net = (e.nozzleEnd?.[nz.id]??0) - (e.nozzleStart?.[nz.id]??0) - ((e.nozzleAdj?.[nz.id] ?? e.nozzleAdjTemp?.[nz.id]) ?? 0);
               if (net <= 0) return;
               const rev = net * (fuel.sell || 0);
               const cost = net * (fuel.cost || 0);
               fuelRev += rev;
               fuelCostTotal += cost;
-              if (!fuelByType[fuel.id]) fuelByType[fuel.id] = { name: fuel.name, liters: 0, rev: 0, cost: 0 };
-              fuelByType[fuel.id].liters += net;
-              fuelByType[fuel.id].rev += rev;
-              fuelByType[fuel.id].cost += cost;
+              const fuelName = fuel.name || `وقود ${nz.fuelId}`;
+              const fuelKey = nz.fuelId;
+              if (!fuelByType[fuelKey]) fuelByType[fuelKey] = { name: fuelName, liters: 0, rev: 0, cost: 0 };
+              fuelByType[fuelKey].liters += net;
+              fuelByType[fuelKey].rev += rev;
+              fuelByType[fuelKey].cost += cost;
             });
           });
           const fuelProfit = fuelRev - fuelCostTotal;
 
-          // ربح المنتجات من DB.sales
+          // ربح المنتجات من DB.sales — السعر محفوظ في سجل البيع نفسه (price, cost)
           const prodRev = prodSales.reduce((s,x)=>s+x.total,0);
           const prodCost = prodSales.reduce((s,x)=>s+(x.cost||0)*x.qty,0);
           const prodProfit = prodRev - prodCost;
 
           const totalProfit = fuelProfit + prodProfit;
 
-          // ربح كل وردية
+          // ربح كل وردية — باستخدام snapshot
           const shiftRows = closedShifts.sort((a,b)=>new Date(b.endTime)-new Date(a.endTime)).map(e => {
             const pump = (DB.pumps||[]).find(p=>p.id===e.pumpId);
             let sRev=0, sCost=0;
+            let priceChangedWarning = '';
+
             if (pump?.nozzles) {
               pump.nozzles.forEach(nz => {
-                const fuel = (DB.fuels||[]).find(f=>f.id==nz.fuelId);
+                const snap = e.fuelPriceSnapshot?.[nz.fuelId];
+                const currentFuel = (DB.fuels||[]).find(f=>f.id==nz.fuelId);
+                const fuel = snap || currentFuel;
                 if (!fuel) return;
-                const net = (e.nozzleEnd?.[nz.id]??0)-(e.nozzleStart?.[nz.id]??0)-(e.nozzleAdj?.[nz.id]??0);
+                const net = (e.nozzleEnd?.[nz.id]??0)-(e.nozzleStart?.[nz.id]??0)-(((e.nozzleAdj?.[nz.id] ?? e.nozzleAdjTemp?.[nz.id]) ?? 0));
                 if (net>0) { sRev += net*(fuel.sell||0); sCost += net*(fuel.cost||0); }
+
+                // تحقق هل السعر اتغير بعد إغلاق الوردية
+                if (snap && currentFuel) {
+                  const snapSell = snap.sell || 0;
+                  const currSell = currentFuel.sell || 0;
+                  if (Math.abs(snapSell - currSell) > 0.001) {
+                    priceChangedWarning += `<div style="font-size:10px;color:var(--amber);margin-top:2px">⚠️ ${snap.name||''}: باع بـ <strong>${snapSell} ج</strong> — الحالي <span style="color:var(--text3)">${currSell} ج</span></div>`;
+                  }
+                }
               });
             }
             const sProfit = sRev - sCost;
             return `<tr>
               <td style="font-size:12px;color:var(--text3)">${fDate(e.endTime?.slice(0,10)||'')}</td>
-              <td><strong>${e.pumpName}</strong></td>
+              <td><strong>${e.pumpName}</strong>${priceChangedWarning ? `<div>${priceChangedWarning}</div>` : ''}</td>
               <td>${e.workerName}</td>
               <td style="font-family:var(--mono);color:var(--accent2)">${fN(sRev)} ج</td>
               <td style="font-family:var(--mono);color:var(--text2)">${fN(sCost)} ج</td>
@@ -8123,6 +8297,147 @@
                       <td style="font-family:var(--mono);color:var(--amber);font-weight:900">${totalEvapLiters.toFixed(1)} ل</td>
                       <td style="font-family:var(--mono);color:var(--red);font-weight:900">${fN(totalEvapValue)} ج</td>
                       <td>—</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>`;
+          return;
+        }
+
+        // ══════════════════════════════════════════
+        // تقرير تجميع العيارات
+        // ══════════════════════════════════════════
+        if (activeReport === 'calibrations') {
+          const closedEntries = (DB.shiftEntries || [])
+            .filter(e => {
+              if (e.status !== 'closed') return false;
+              const d = e.endTime ? e.endTime.slice(0, 10) : '';
+              return d >= from && d <= toRaw;
+            })
+            .sort((a, b) => new Date(b.endTime) - new Date(a.endTime));
+
+          // حساب إجمالي العيارات لكل وردية
+          let grandTotalAdj = 0;
+          let grandTotalAdjValue = 0;
+          const shiftRows = [];
+          const fuelAdjMap = {};   // { fuelId: { name, totalAdj, totalValue } }
+
+          closedEntries.forEach(e => {
+            const pump = (DB.pumps || []).find(p => p.id === e.pumpId);
+            let shiftAdj = 0;
+            let shiftAdjValue = 0;
+            const nozzleDetails = [];
+
+            if (pump?.nozzles) {
+              pump.nozzles.forEach(nz => {
+                const fuel = (DB.fuels || []).find(f => f.id == nz.fuelId);
+                if (!fuel) return;
+                // nozzleAdj = تم حفظه عند التعديل؛ nozzleAdjTemp = المحفوظ عند الإغلاق العادي
+                const adj = (e.nozzleAdj?.[nz.id] ?? e.nozzleAdjTemp?.[nz.id] ?? 0);
+                if (adj <= 0) return;
+                const val = adj * (fuel.sell || 0);
+                shiftAdj += adj;
+                shiftAdjValue += val;
+
+                // تجميع حسب نوع الوقود
+                if (!fuelAdjMap[fuel.id]) fuelAdjMap[fuel.id] = { name: fuel.name, totalAdj: 0, totalValue: 0, count: 0 };
+                fuelAdjMap[fuel.id].totalAdj += adj;
+                fuelAdjMap[fuel.id].totalValue += val;
+                fuelAdjMap[fuel.id].count++;
+
+                nozzleDetails.push(`<span style="font-size:11px;background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:2px 7px;margin-left:4px;font-family:var(--mono)">${nz.label}: ${adj.toFixed(3)} ل</span>`);
+              });
+            }
+
+            if (shiftAdj <= 0) return; // وردية بدون عيارات تُحذف من الجدول
+
+            grandTotalAdj += shiftAdj;
+            grandTotalAdjValue += shiftAdjValue;
+
+            shiftRows.push(`<tr>
+              <td style="font-size:12px;color:var(--text3)">${fDate(e.endTime?.slice(0,10)||'')}</td>
+              <td><strong>${e.pumpName}</strong></td>
+              <td>${e.workerName || '—'}</td>
+              <td style="font-size:11px">${nozzleDetails.join('') || '—'}</td>
+              <td style="font-family:var(--mono);font-weight:800;color:var(--amber)">${shiftAdj.toFixed(3)} ل</td>
+              <td style="font-family:var(--mono);font-weight:800;color:var(--red)">${fN(shiftAdjValue)} ج</td>
+            </tr>`);
+          });
+
+          // صناديق ملخص
+          const totalShiftsWithAdj = shiftRows.length;
+          const avgAdj = totalShiftsWithAdj > 0 ? grandTotalAdj / totalShiftsWithAdj : 0;
+
+          const summaryCards = `
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+              <div style="background:var(--amber-dim);border:2px solid rgba(245,158,11,.4);border-radius:14px;padding:16px;text-align:center">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">⚖️ إجمالي العيارات</div>
+                <div style="font-size:26px;font-weight:900;color:var(--amber);font-family:var(--mono)">${grandTotalAdj.toFixed(2)}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px">لتر</div>
+              </div>
+              <div style="background:var(--red-dim);border:2px solid rgba(239,68,68,.35);border-radius:14px;padding:16px;text-align:center">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">💰 القيمة المالية</div>
+                <div style="font-size:26px;font-weight:900;color:var(--red);font-family:var(--mono)">${fN(grandTotalAdjValue)}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px">جنيه</div>
+              </div>
+              <div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:14px;padding:16px;text-align:center">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">🔄 عدد الورديات</div>
+                <div style="font-size:26px;font-weight:900;color:var(--accent2);font-family:var(--mono)">${totalShiftsWithAdj}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px">وردية</div>
+              </div>
+              <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;text-align:center">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">📊 متوسط / وردية</div>
+                <div style="font-size:26px;font-weight:900;color:var(--green);font-family:var(--mono)">${avgAdj.toFixed(2)}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:2px">لتر / وردية</div>
+              </div>
+            </div>`;
+
+          // تفصيل حسب نوع الوقود
+          const fuelRows = Object.values(fuelAdjMap).map(f => `<tr>
+            <td style="font-weight:700">⛽ ${f.name}</td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--amber);text-align:center">${f.totalAdj.toFixed(3)} ل</td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--red);text-align:center">${fN(f.totalValue)} ج</td>
+          </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3)">لا توجد عيارات</td></tr>`;
+
+          if (!shiftRows.length) {
+            out.innerHTML = summaryCards + `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:30px;text-align:center;color:var(--text3);font-size:14px">لا توجد ورديات تحتوي على عيارات في هذه الفترة</div>`;
+            return;
+          }
+
+          out.innerHTML = summaryCards + `
+            <!-- تفصيل حسب نوع الوقود -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">⛽ تفصيل العيارات حسب نوع الوقود</div>
+              <div style="overflow-x:auto">
+                <table class="tbl">
+                  <thead><tr><th>نوع الوقود</th><th style="text-align:center">إجمالي العيار (ل)</th><th style="text-align:center">القيمة المالية (ج)</th></tr></thead>
+                  <tbody>${fuelRows}</tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- جدول تفاصيل الورديات -->
+            <div class="card">
+              <div class="card-header">📋 تفاصيل العيارات بالوردية</div>
+              <div style="overflow-x:auto">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>الوردية</th>
+                      <th>المشرف</th>
+                      <th>تفصيل المسدسات</th>
+                      <th style="text-align:center">العيار إجمالي (ل)</th>
+                      <th style="text-align:center">القيمة المالية (ج)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${shiftRows.join('')}
+                    <tr style="background:var(--amber-dim);font-weight:900">
+                      <td colspan="4" style="font-size:13px">📊 الإجمالي الكلي</td>
+                      <td style="font-family:var(--mono);color:var(--amber);font-size:15px;text-align:center">${grandTotalAdj.toFixed(3)} ل</td>
+                      <td style="font-family:var(--mono);color:var(--red);font-size:15px;text-align:center">${fN(grandTotalAdjValue)} ج</td>
                     </tr>
                   </tbody>
                 </table>
@@ -10263,7 +10578,16 @@
         }
 
         const rows = openEntry ? (openEntry.productSales || []) : [];
-        rows.push({ productId, qty, mode, date: new Date().toISOString() });
+        // ✅ نحفظ سعر البيع والتكلفة وقت البيع لضمان ثبات الأرقام حتى لو تغير السعر لاحقاً
+        const soldProduct = DB.products.find(x => x.id == productId);
+        rows.push({
+          productId, qty, mode,
+          date: new Date().toISOString(),
+          sellPrice: soldProduct ? (soldProduct.sell || 0) : 0,
+          costPrice: soldProduct ? (soldProduct.cost || 0) : 0,
+          productName: soldProduct ? soldProduct.name : '',
+          compId: mode === 'company' ? (document.getElementById(`sePSComp_${pumpId}`)?.value || '') : '',
+        });
         if (openEntry) openEntry.productSales = rows;
         if (prodSel) prodSel.value = '';
         if (qtySel) qtySel.value = 1;
@@ -10385,8 +10709,9 @@
         const prodSales = openEntry2 ? (openEntry2.productSales || []) : [];
         let prodCashTotal = 0, prodCompTotal = 0;
         prodSales.forEach(s => {
-          const p = DB.products.find(x => x.id == s.productId);
-          const val = p ? p.sell * (s.qty||1) : 0;
+          // استخدم السعر المحفوظ وقت البيع — fallback للسعر الحالي للبيانات القديمة
+          const price = s.sellPrice !== undefined ? s.sellPrice : (DB.products.find(x => x.id == s.productId)?.sell || 0);
+          const val = price * (s.qty||1);
           if (s.mode === 'cash') prodCashTotal += val;
           else prodCompTotal += val;
         });
@@ -10412,7 +10737,7 @@
         // Update deliver button label
         const deliverBtn = document.getElementById(`seDeliverBtn_${pumpId}`);
         if (deliverBtn) {
-          deliverBtn.textContent = `✅ أودّ المبلغ — ${fN(actualCash)} ج (المفتلم)`;
+          deliverBtn.textContent = `✅ فرق الكاش ${fN(actualCash)} ج `;
         }
 
         // Auto-save values to open entry
@@ -10455,11 +10780,12 @@
         const workerId = workerEl ? workerEl.value : '';
         const worker = DB.employees.find(e => e.id == workerId);
 
-        // Collect current nozzle readings as start values
+        // Collect current nozzle readings as start values — nz.counter هو المصدر الأصح دايماً
         const nozzleStart = {};
         (pump.nozzles || []).forEach(nz => {
           const el = document.getElementById(`seStart_${pumpId}_${nz.id}`);
-          nozzleStart[nz.id] = parseFloat(el ? el.value : nz.counter) || 0;
+          // nz.counter يتحدث عند كل إغلاق وردية — هو المرجع الصح
+          nozzleStart[nz.id] = nz.counter || parseFloat(el?.value) || 0;
         });
 
         // ✅ ترحيل العهدة المتبقية من الوردية السابقة
@@ -10507,10 +10833,21 @@
         const nozzleEnd = {};
         (pump.nozzles || []).forEach(nz => {
           const el = document.getElementById(`seEnd_${pumpId}_${nz.id}`);
-          const endVal = parseFloat(el ? el.value : 0) || 0;
+          // لو الـ input موجود في الـ DOM استخدمه، وإلا استخدم nozzleEndTemp المحفوظ
+          const endVal = el
+            ? (parseFloat(el.value) || 0)
+            : (openEntry.nozzleEndTemp?.[nz.id] ?? 0);
           nozzleEnd[nz.id] = endVal;
-          // Update the nozzle counter so next shift picks it as start
           nz.counter = endVal;
+        });
+
+        // كمان نحفظ nozzleAdj من الـ DOM أو من nozzleAdjTemp
+        if (!openEntry.nozzleAdj) openEntry.nozzleAdj = {};
+        (pump.nozzles || []).forEach(nz => {
+          const adjEl = document.getElementById(`seAdj_${pumpId}_${nz.id}`);
+          openEntry.nozzleAdj[nz.id] = adjEl
+            ? (parseFloat(adjEl.value) || 0)
+            : (openEntry.nozzleAdjTemp?.[nz.id] ?? 0);
         });
 
         // ✅ عهدة المنتجات — احسب المتبقي وارحّله للوردية الجاية
@@ -10528,12 +10865,13 @@
         });
         openEntry.carriedOverItems = carriedOverItems;
 
-        // ✅ مبيعات الشركات من العهدة → خزينة الشركات للتوزيع
+        // ✅ مبيعات الشركات من العهدة → خزينة الشركات للتوزيع (استخدام السعر المحفوظ وقت البيع)
         const prodCompSales = productSales.filter(s => s.mode === 'company' && s.compId);
         if (prodCompSales.length > 0) {
           const totalProdComp = prodCompSales.reduce((sum, s) => {
-            const p = DB.products.find(x => x.id == s.productId);
-            return sum + (p ? p.sell * (s.qty||1) : 0);
+            // sellPrice محفوظ وقت البيع — fallback للسعر الحالي للورديات القديمة
+            const price = s.sellPrice !== undefined ? s.sellPrice : (DB.products.find(x => x.id == s.productId)?.sell || 0);
+            return sum + (price * (s.qty||1));
           }, 0);
           if (totalProdComp > 0) {
             DB.compTreasuryEntries.push({
@@ -10544,8 +10882,8 @@
               workerName: openEntry.workerName,
               shiftDate: new Date().toISOString(),
               companyRows: prodCompSales.map(s => {
-                const p = DB.products.find(x => x.id == s.productId);
-                return { compId: s.compId, amount: p ? p.sell * (s.qty||1) : 0 };
+                const price = s.sellPrice !== undefined ? s.sellPrice : (DB.products.find(x => x.id == s.productId)?.sell || 0);
+                return { compId: s.compId, amount: price * (s.qty||1) };
               }),
               totalAmount: totalProdComp,
               status: 'pending',
@@ -10632,6 +10970,20 @@
             shiftEntryId: openEntry.id,
           });
         }
+
+        // ✅ حفظ snapshot لأسعار الوقود وقت الإغلاق (لضمان ثبات تقرير الأرباح)
+        const fuelPriceSnapshot = {};
+        (DB.fuels || []).forEach(f => {
+          fuelPriceSnapshot[f.id] = { sell: f.sell || 0, cost: f.cost || 0, name: f.name };
+        });
+        openEntry.fuelPriceSnapshot = fuelPriceSnapshot;
+
+        // ✅ حفظ snapshot لأسعار المنتجات وقت الإغلاق
+        const productPriceSnapshot = {};
+        (DB.products || []).forEach(p => {
+          productPriceSnapshot[p.id] = { sell: p.sell || 0, cost: p.cost || 0, name: p.name };
+        });
+        openEntry.productPriceSnapshot = productPriceSnapshot;
 
         // Mark entry closed
         openEntry.status = 'closed';
