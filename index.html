@@ -3191,7 +3191,7 @@
             </div>
             <div class="report-card" onclick="runReport('inventory')">
               <div class="report-icon">📦</div>
-              <div class="report-title">الجرد الشامل  </div>
+              <div class="report-title">تقرير المخزون</div>
               <div class="report-desc">حركة المخزون والتنبيهات</div>
             </div>
 
@@ -3214,6 +3214,11 @@
               <div class="report-icon">⚖️</div>
               <div class="report-title" style="color:var(--amber);">تقرير تجميع العيارات</div>
               <div class="report-desc">إجمالي العيارات المسجلة في كل وردية خلال الفترة المحددة</div>
+            </div>
+            <div class="report-card" onclick="goPage('nozzle-report', null)" style="border:1px solid rgba(16,185,129,0.35);background:rgba(16,185,129,0.05);">
+              <div class="report-icon">🔫</div>
+              <div class="report-title" style="color:var(--green);">تقرير مبيعات المسدسات</div>
+              <div class="report-desc">إجمالي بيع كل مسدس لكل طلمبة مع نوع الوقود وفلتر التاريخ</div>
             </div>
           </div>
         </div>
@@ -3375,6 +3380,61 @@
 
           <!-- جدول القياسات -->
           <div id="mrContent"></div>
+
+        </div>
+
+        <!-- ═══ NOZZLE SALES REPORT PAGE — تقرير مبيعات المسدسات ═══ -->
+        <div class="page" id="page-nozzle-report">
+
+          <!-- هيدر الصفحة -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <button class="btn btn-secondary" onclick="goPage('reports', document.querySelector('[onclick*=reports]'))" style="gap:6px;">
+              ← رجوع للتقارير
+            </button>
+            <div>
+              <div style="font-size:17px;font-weight:800;">🔫 تقرير مبيعات المسدسات</div>
+              <div style="font-size:12px;color:var(--text3);">إجمالي مبيعات كل مسدس لكل طلمبة مع نوع الوقود</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn btn-sm btn-primary" onclick="window.print()">🖨️ طباعة</button>
+          </div>
+
+          <!-- فلتر -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">📅 فلتر التاريخ والطلمبة</div>
+            <div class="card-body">
+              <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;">
+                <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+                  <label class="form-label">من تاريخ</label>
+                  <input type="date" class="form-input" id="nzFrom" onchange="renderNozzleReport()">
+                </div>
+                <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+                  <label class="form-label">إلى تاريخ</label>
+                  <input type="date" class="form-input" id="nzTo" onchange="renderNozzleReport()">
+                </div>
+                <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+                  <label class="form-label">الطلمبة</label>
+                  <select class="form-input form-select" id="nzPump" onchange="renderNozzleReport()">
+                    <option value="">كل الطلمبات</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+                  <label class="form-label">نوع الوقود</label>
+                  <select class="form-input form-select" id="nzFuel" onchange="renderNozzleReport()">
+                    <option value="">كل أنواع الوقود</option>
+                  </select>
+                </div>
+                <button class="btn btn-success" onclick="renderNozzleReport()" style="flex-shrink:0;">🔍 تصفية</button>
+                <button class="btn btn-secondary" onclick="nzResetFilter()" style="flex-shrink:0;">↺ إعادة تعيين</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- بطاقات الملخص -->
+          <div id="nzSummaryCards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;"></div>
+
+          <!-- المحتوى الرئيسي -->
+          <div id="nzContent"></div>
 
         </div>
 
@@ -4924,6 +4984,7 @@
         "report-detail": ["تفاصيل التقرير", "نتائج التقرير المحدد"],
         "shift-report": ["تقرير الورديات", "سجل كامل لجميع الورديات المغلقة"],
         "morning-report": ["تقرير القياس الصباحي", "قراءات الخزانات اليومية والفروقات"],
+        "nozzle-report": ["تقرير مبيعات المسدسات", "إجمالي مبيعات كل مسدس لكل طلمبة"],
         settings: ["الإعدادات", "إعدادات النظام والمحطة"],
       };
       const headerBtns = {
@@ -4991,6 +5052,7 @@
         else if (id === "reports") renderReports();
         else if (id === "shift-report") renderShiftReport();
         else if (id === "morning-report") renderMorningReportPage();
+        else if (id === "nozzle-report") initNozzleReport();
         else if (id === "settings") renderSettings();
       }
 
@@ -10072,6 +10134,336 @@
       }
 
       // ═══════════════════════════════════════════════════
+      // NOZZLE SALES REPORT — تقرير مبيعات المسدسات
+      // ═══════════════════════════════════════════════════
+
+      function initNozzleReport() {
+        const now = new Date();
+        const fromEl = document.getElementById('nzFrom');
+        const toEl   = document.getElementById('nzTo');
+        if (!fromEl.value) fromEl.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+        if (!toEl.value)   toEl.value   = now.toISOString().slice(0,10);
+
+        // Populate pump filter
+        const pumpSel = document.getElementById('nzPump');
+        const prevPump = pumpSel.value;
+        pumpSel.innerHTML = '<option value="">كل الطلمبات</option>' +
+          (DB.pumps||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        if (prevPump) pumpSel.value = prevPump;
+
+        // Populate fuel filter
+        const fuelSel = document.getElementById('nzFuel');
+        const prevFuel = fuelSel.value;
+        fuelSel.innerHTML = '<option value="">كل أنواع الوقود</option>' +
+          (DB.fuels||[]).map(f => `<option value="${f.id}">${f.icon||'⛽'} ${f.name}</option>`).join('');
+        if (prevFuel) fuelSel.value = prevFuel;
+
+        renderNozzleReport();
+      }
+
+      function nzResetFilter() {
+        const now = new Date();
+        document.getElementById('nzFrom').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+        document.getElementById('nzTo').value   = now.toISOString().slice(0,10);
+        document.getElementById('nzPump').value = '';
+        document.getElementById('nzFuel').value = '';
+        renderNozzleReport();
+      }
+
+      function renderNozzleReport() {
+        const fromVal = document.getElementById('nzFrom').value;
+        const toVal   = document.getElementById('nzTo').value;
+        const filterPumpId = document.getElementById('nzPump').value;
+        const filterFuelId = document.getElementById('nzFuel').value;
+
+        const from = fromVal ? new Date(fromVal) : new Date(0);
+        const to   = toVal   ? new Date(toVal)   : new Date();
+        to.setHours(23, 59, 59, 999);
+
+        // Filter closed shift entries by date
+        const entries = (DB.shiftEntries||[]).filter(e => {
+          if (e.status !== 'closed') return false;
+          const d = new Date(e.endTime || e.startTime);
+          if (d < from || d > to) return false;
+          if (filterPumpId && String(e.pumpId) !== String(filterPumpId)) return false;
+          return true;
+        });
+
+        // Build nozzle aggregation: key = "pumpId_nozzleId"
+        // For each nozzle: totalLiters, totalValue, numShifts, fuelName, fuelIcon, pumpName, nozzleLabel
+        const nozzleMap = {}; // key → {pumpId, pumpName, nozzleId, nozzleLabel, fuelId, fuelName, fuelIcon, fuelColor, liters, value, shifts}
+
+        entries.forEach(e => {
+          const pump = DB.pumps.find(p => p.id === e.pumpId);
+          if (!pump || !pump.nozzles) return;
+
+          pump.nozzles.forEach(nz => {
+            // Apply fuel filter
+            if (filterFuelId && String(nz.fuelId) !== String(filterFuelId)) return;
+
+            const fuel = DB.fuels.find(f => f.id == nz.fuelId);
+            // Use price snapshot if available, fallback to current price
+            const fuelPrice = e.fuelPriceSnapshot && e.fuelPriceSnapshot[nz.fuelId]
+              ? e.fuelPriceSnapshot[nz.fuelId].sell
+              : (fuel ? fuel.sell : 0);
+            const fuelName = (e.fuelPriceSnapshot && e.fuelPriceSnapshot[nz.fuelId])
+              ? e.fuelPriceSnapshot[nz.fuelId].name
+              : (fuel ? fuel.name : '—');
+
+            const startVal = e.nozzleStart?.[nz.id] ?? 0;
+            const endVal   = e.nozzleEnd?.[nz.id]   ?? 0;
+            const adjVal   = e.nozzleAdj?.[nz.id]   ?? 0;
+            const net = endVal - startVal - adjVal;
+            if (net <= 0 && endVal === 0) return; // skip unrecorded
+
+            const val = net * fuelPrice;
+            const key = `${e.pumpId}_${nz.id}`;
+
+            if (!nozzleMap[key]) {
+              nozzleMap[key] = {
+                pumpId: e.pumpId,
+                pumpName: pump.name,
+                nozzleId: nz.id,
+                nozzleLabel: nz.label || `مسدس ${nz.id}`,
+                fuelId: nz.fuelId,
+                fuelName,
+                fuelIcon: fuel ? (fuel.icon || '⛽') : '⛽',
+                fuelColor: getFuelColor(nz.fuelId),
+                liters: 0,
+                value: 0,
+                shifts: 0,
+                firstStart: startVal,
+                lastEnd: endVal,
+                currentCounter: nz.counter ?? endVal,
+              };
+            }
+            nozzleMap[key].liters += net;
+            nozzleMap[key].value  += val;
+            nozzleMap[key].shifts++;
+            nozzleMap[key].firstStart = Math.min(nozzleMap[key].firstStart, startVal);
+            nozzleMap[key].lastEnd    = Math.max(nozzleMap[key].lastEnd, endVal);
+            nozzleMap[key].currentCounter = nz.counter ?? endVal;
+          });
+        });
+
+        const nozzles = Object.values(nozzleMap);
+
+        // Summary cards
+        const totalLiters = nozzles.reduce((s,n) => s + n.liters, 0);
+        const totalValue  = nozzles.reduce((s,n) => s + n.value, 0);
+        const totalShifts = entries.length;
+        const uniquePumps = new Set(nozzles.map(n => n.pumpId)).size;
+
+        const summaryEl = document.getElementById('nzSummaryCards');
+        summaryEl.innerHTML = `
+          <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">💰 إجمالي الإيرادات</div>
+            <div style="font-size:22px;font-weight:900;color:var(--green);font-family:var(--mono);">${fN(totalValue)}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">جنيه</div>
+          </div>
+          <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⛽ إجمالي اللترات</div>
+            <div style="font-size:22px;font-weight:900;color:var(--amber);font-family:var(--mono);">${totalLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">لتر</div>
+          </div>
+          <div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">🔫 عدد المسدسات</div>
+            <div style="font-size:22px;font-weight:900;color:var(--accent2);font-family:var(--mono);">${nozzles.length}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">مسدس نشط</div>
+          </div>
+          <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">🔄 عدد الورديات</div>
+            <div style="font-size:22px;font-weight:900;color:var(--purple);font-family:var(--mono);">${totalShifts}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">وردية مغلقة</div>
+          </div>`;
+
+        const contentEl = document.getElementById('nzContent');
+
+        if (!nozzles.length) {
+          contentEl.innerHTML = `
+            <div class="card">
+              <div class="card-body" style="text-align:center;padding:60px 20px;color:var(--text3);">
+                <div style="font-size:48px;margin-bottom:12px;">🔫</div>
+                <div style="font-size:16px;font-weight:700;">لا توجد بيانات في هذه الفترة</div>
+                <div style="font-size:13px;margin-top:6px;">تأكد من وجود ورديات مغلقة بقراءات مسدسات في الفترة المحددة</div>
+              </div>
+            </div>`;
+          return;
+        }
+
+        // Group by pump
+        const byPump = {};
+        nozzles.forEach(n => {
+          if (!byPump[n.pumpId]) byPump[n.pumpId] = { pumpName: n.pumpName, nozzles: [] };
+          byPump[n.pumpId].nozzles.push(n);
+        });
+
+        // Summary table (all nozzles)
+        const allRows = nozzles.sort((a,b) => b.value - a.value).map((n, i) => `
+          <tr>
+            <td style="font-weight:700;">${n.pumpName}</td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;">
+                🔫 ${n.nozzleLabel}
+              </span>
+            </td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:${n.fuelColor}15;border:1px solid ${n.fuelColor}40;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:${n.fuelColor};">
+                ${n.fuelIcon} ${n.fuelName}
+              </span>
+            </td>
+            <td style="font-family:var(--mono);color:var(--text2);text-align:center;font-size:12px;">
+              ${n.firstStart.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+            </td>
+            <td style="font-family:var(--mono);color:var(--accent2);font-weight:700;text-align:center;font-size:12px;">
+              ${n.lastEnd.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+            </td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--purple);text-align:center;font-size:12px;">
+              ${n.currentCounter.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+            </td>
+            <td style="font-family:var(--mono);font-weight:700;color:var(--amber);text-align:center;">
+              ${n.liters.toLocaleString('ar-EG',{maximumFractionDigits:2})} لتر
+            </td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:13px;text-align:center;">
+              ${fN(n.value)} ج
+            </td>
+            <td style="text-align:center;color:var(--text3);font-size:12px;">${n.shifts} وردية</td>
+            <td>
+              <div style="background:var(--surface2);border-radius:6px;overflow:hidden;height:8px;min-width:60px;">
+                <div style="height:100%;background:linear-gradient(90deg,${n.fuelColor},${n.fuelColor}99);border-radius:6px;width:${Math.min(100,(n.value/Math.max(1,totalValue)*100)).toFixed(1)}%;"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text3);text-align:left;margin-top:2px;">${(n.value/Math.max(1,totalValue)*100).toFixed(1)}%</div>
+            </td>
+          </tr>`).join('');
+
+        // Per-pump cards
+        let pumpCards = '';
+        Object.values(byPump).forEach(pg => {
+          const pumpTotal = pg.nozzles.reduce((s,n) => s + n.value, 0);
+          const pumpLiters = pg.nozzles.reduce((s,n) => s + n.liters, 0);
+          const nozzleRows = pg.nozzles.sort((a,b) => b.value - a.value).map(n => `
+            <div style="border-bottom:1px solid var(--border);background:var(--surface);">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;">
+                <div style="width:38px;height:38px;border-radius:10px;background:${n.fuelColor}18;border:1.5px solid ${n.fuelColor}50;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔫</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:700;font-size:13px;">${n.nozzleLabel}</div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+                    <span style="font-size:11px;background:${n.fuelColor}18;color:${n.fuelColor};border-radius:6px;padding:2px 8px;font-weight:700;">${n.fuelIcon} ${n.fuelName}</span>
+                    <span style="font-size:11px;color:var(--text3);">${n.shifts} وردية</span>
+                  </div>
+                </div>
+                <div style="text-align:center;min-width:80px;">
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${n.liters.toLocaleString('ar-EG',{maximumFractionDigits:1})} ل</div>
+                  <div style="font-size:10px;color:var(--text3);">اللترات</div>
+                </div>
+                <div style="text-align:center;min-width:95px;">
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px;">${fN(n.value)} ج</div>
+                  <div style="font-size:10px;color:var(--text3);">الإيراد</div>
+                </div>
+                <div style="min-width:60px;">
+                  <div style="background:var(--surface3);border-radius:6px;overflow:hidden;height:6px;">
+                    <div style="height:100%;background:${n.fuelColor};border-radius:6px;width:${Math.min(100,(n.value/Math.max(1,pumpTotal)*100)).toFixed(1)}%;"></div>
+                  </div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:2px;text-align:left;">${(n.value/Math.max(1,pumpTotal)*100).toFixed(1)}%</div>
+                </div>
+              </div>
+              <!-- صف العدادات -->
+              <div style="display:flex;gap:0;border-top:1px dashed var(--border);background:var(--surface2);">
+                <div style="flex:1;text-align:center;padding:7px 4px;border-left:1px solid var(--border);">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">قراءة البداية</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--text2);font-size:12px;">${n.firstStart.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:7px 4px;border-left:1px solid var(--border);">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">قراءة النهاية</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:12px;">${n.lastEnd.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                </div>
+                <div style="flex:1;text-align:center;padding:7px 4px;">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">العداد الحالي</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--purple);font-size:12px;">${n.currentCounter.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                </div>
+              </div>
+            </div>`).join('');
+
+          pumpCards += `
+            <div class="card" style="margin-bottom:16px;overflow:hidden;">
+              <div class="card-header" style="background:linear-gradient(135deg,rgba(14,165,233,.08),rgba(14,165,233,.02));gap:14px;">
+                <span style="font-size:20px;">⛽</span>
+                <span style="font-weight:800;font-size:14px;">${pg.pumpName}</span>
+                <div class="spacer"></div>
+                <div style="display:flex;gap:16px;align-items:center;">
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text3);">اللترات</div>
+                    <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${pumpLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})} ل</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--text3);">الإجمالي</div>
+                    <div style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px;">${fN(pumpTotal)} ج</div>
+                  </div>
+                </div>
+              </div>
+              ${nozzleRows}
+              <div style="display:flex;justify-content:flex-end;padding:10px 16px;background:var(--surface2);border-top:1px solid var(--border);">
+                <span style="font-size:12px;color:var(--text2);font-weight:600;">${pg.nozzles.length} مسدس</span>
+              </div>
+            </div>`;
+        });
+
+        contentEl.innerHTML = `
+          <!-- جدول ملخص كل المسدسات -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(16,185,129,.02));">
+              🔫 جدول إجمالي مبيعات المسدسات
+              <span style="font-size:11px;color:var(--text3);font-weight:400;margin-right:8px;">${fromVal} → ${toVal}</span>
+              <div class="spacer"></div>
+              <span style="font-size:12px;color:var(--text3);">${nozzles.length} مسدس</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>الطلمبة</th>
+                    <th>المسدس</th>
+                    <th>نوع الوقود</th>
+                    <th style="text-align:center;">قراءة البداية</th>
+                    <th style="text-align:center;">قراءة النهاية</th>
+                    <th style="text-align:center;">العداد الحالي</th>
+                    <th style="text-align:center;">الكمية (لتر)</th>
+                    <th style="text-align:center;">الإيراد (ج)</th>
+                    <th style="text-align:center;">الورديات</th>
+                    <th>النسبة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${allRows}
+                  <tr style="background:var(--green-dim);font-weight:900;border-top:2px solid rgba(16,185,129,.3);">
+                    <td colspan="3" style="font-size:13px;font-weight:800;">🔫 الإجمالي الكلي</td>
+                    <td style="text-align:center;color:var(--text3);">—</td>
+                    <td style="text-align:center;color:var(--text3);">—</td>
+                    <td style="text-align:center;color:var(--text3);">—</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber);text-align:center;">${totalLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})} لتر</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:15px;text-align:center;">${fN(totalValue)} ج</td>
+                    <td style="text-align:center;">${totalShifts}</td>
+                    <td>100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- تفصيل لكل طلمبة -->
+          <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text2);">📋 تفصيل كل طلمبة</div>
+          ${pumpCards}`;
+      }
+
+      function getFuelColor(fuelId) {
+        const colors = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+        const fuel = (DB.fuels||[]).find(f => f.id == fuelId);
+        if (fuel && fuel.color) return fuel.color;
+        const idx = (DB.fuels||[]).findIndex(f => f.id == fuelId);
+        return colors[Math.max(0,idx) % colors.length];
+      }
+
+      // ═══════════════════════════════════════════════════
       // SHIFT ENTRY — لكل طلمبة عامل وكاش خاص بيها
       // ═══════════════════════════════════════════════════
 
@@ -10865,7 +11257,7 @@
         // Update deliver button label
         const deliverBtn = document.getElementById(`seDeliverBtn_${pumpId}`);
         if (deliverBtn) {
-          deliverBtn.textContent = `فرق الكاش   — ${fN(actualCash)} ج `;
+          deliverBtn.textContent = `✅ أودّ المبلغ — ${fN(actualCash)} ج (المفتلم)`;
         }
 
         // Auto-save values to open entry
