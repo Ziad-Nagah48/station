@@ -3191,7 +3191,7 @@
             </div>
             <div class="report-card" onclick="runReport('inventory')">
               <div class="report-icon">📦</div>
-              <div class="report-title">تقرير المخزون</div>
+              <div class="report-title">الجرد الشامل </div>
               <div class="report-desc">حركة المخزون والتنبيهات</div>
             </div>
 
@@ -3219,6 +3219,11 @@
               <div class="report-icon">🔫</div>
               <div class="report-title" style="color:var(--green);">تقرير مبيعات المسدسات</div>
               <div class="report-desc">إجمالي بيع كل مسدس لكل طلمبة مع نوع الوقود وفلتر التاريخ</div>
+            </div>
+            <div class="report-card" onclick="goPage('supply-inventory-report', null)" style="border:1px solid rgba(245,158,11,0.4);background:rgba(245,158,11,0.06);">
+              <div class="report-icon">🛢️</div>
+              <div class="report-title" style="color:var(--amber);">جرد التموين</div>
+              <div class="report-desc">التصريف الفعلي = رصيد أول المدة + الوارد − رصيد آخر المدة ومقارنته بقراءات المسدسات</div>
             </div>
           </div>
         </div>
@@ -3435,6 +3440,51 @@
 
           <!-- المحتوى الرئيسي -->
           <div id="nzContent"></div>
+
+        </div>
+
+        <!-- ═══ SUPPLY INVENTORY REPORT — جرد التموين ═══ -->
+        <div class="page" id="page-supply-inventory-report">
+
+          <!-- هيدر الصفحة -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <button class="btn btn-secondary" onclick="goPage('reports', document.querySelector('[onclick*=reports]'))" style="gap:6px;">
+              ← رجوع للتقارير
+            </button>
+            <div>
+              <div style="font-size:17px;font-weight:800;">🛢️ جرد التموين</div>
+              <div style="font-size:12px;color:var(--text3);">التصريف الفعلي = رصيد أول المدة + الوارد − رصيد آخر المدة</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn btn-sm btn-primary" onclick="window.print()">🖨️ طباعة</button>
+          </div>
+
+          <!-- فلتر -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">📅 تحديد الفترة وإدخال الأرصدة</div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:14px;align-items:end;flex-wrap:wrap;">
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">من تاريخ</label>
+                  <input type="date" class="form-input" id="siFrom" onchange="renderSupplyInventoryReport()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label class="form-label">إلى تاريخ</label>
+                  <input type="date" class="form-input" id="siTo" onchange="renderSupplyInventoryReport()">
+                </div>
+                <button class="btn btn-amber" onclick="renderSupplyInventoryReport()" style="flex-shrink:0;">🔍 احسب</button>
+                <button class="btn btn-secondary" onclick="siResetFilter()" style="flex-shrink:0;">↺ إعادة تعيين</button>
+              </div>
+              <!-- رصيد أول المدة لكل نوع وقود -->
+              <div id="siOpeningInputs" style="margin-top:16px;"></div>
+            </div>
+          </div>
+
+          <!-- بطاقات الملخص -->
+          <div id="siSummaryCards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;"></div>
+
+          <!-- المحتوى -->
+          <div id="siContent"></div>
 
         </div>
 
@@ -5053,6 +5103,7 @@
         else if (id === "shift-report") renderShiftReport();
         else if (id === "morning-report") renderMorningReportPage();
         else if (id === "nozzle-report") initNozzleReport();
+        else if (id === "supply-inventory-report") initSupplyInventoryReport();
         else if (id === "settings") renderSettings();
       }
 
@@ -10455,6 +10506,243 @@
           ${pumpCards}`;
       }
 
+      // ══════════════════════════════════════════════════════
+      // جرد التموين — Supply Inventory Report
+      // ══════════════════════════════════════════════════════
+
+      const siOpeningBalances = {}; // fallback يدوي لو مفيش قراءة صباحية
+
+      function siResetFilter() {
+        const now = new Date();
+        document.getElementById('siFrom').value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+        document.getElementById('siTo').value   = now.toISOString().slice(0,10);
+        renderSupplyInventoryReport();
+      }
+
+      function initSupplyInventoryReport() {
+        const now = new Date();
+        const fromEl = document.getElementById('siFrom');
+        const toEl   = document.getElementById('siTo');
+        if (fromEl && !fromEl.value) fromEl.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+        if (toEl   && !toEl.value)   toEl.value   = now.toISOString().slice(0,10);
+        renderSupplyInventoryReport();
+      }
+
+      // رصيد أول المدة: قراءة يوم البداية بالظبط، لو مفيش → أقرب يوم بعده
+      function getOpeningFromMorningReadings(fuelId, fromDate) {
+        const readings = (DB.morningReadings || [])
+          .filter(function(r){ return r.date >= fromDate; })
+          .sort(function(a,b){ return a.date.localeCompare(b.date); }); // تصاعدي — الأقرب للبداية أولاً
+        for (var i = 0; i < readings.length; i++) {
+          var tank = readings[i].tanks.find(function(t){ return t.fuelId == fuelId; });
+          if (tank && tank.reading !== null && tank.reading !== undefined) {
+            return { reading: tank.reading, date: readings[i].date };
+          }
+        }
+        return null;
+      }
+
+      // رصيد آخر المدة: قراءة يوم النهاية بالظبط، لو مفيش → أقرب يوم قبله
+      function getClosingFromMorningReadings(fuelId, toDate) {
+        const readings = (DB.morningReadings || [])
+          .filter(function(r){ return r.date <= toDate; })
+          .sort(function(a,b){ return b.date.localeCompare(a.date); }); // تنازلي — الأقرب للنهاية أولاً
+        for (var i = 0; i < readings.length; i++) {
+          var tank = readings[i].tanks.find(function(t){ return t.fuelId == fuelId; });
+          if (tank && tank.reading !== null && tank.reading !== undefined) {
+            return { reading: tank.reading, date: readings[i].date };
+          }
+        }
+        return null;
+      }
+
+      function renderSupplyInventoryReport() {
+        const fromVal = document.getElementById('siFrom') ? document.getElementById('siFrom').value : '';
+        const toVal   = document.getElementById('siTo')   ? document.getElementById('siTo').value   : '';
+        if (!fromVal || !toVal) return;
+
+        const from = fromVal;
+        const to   = toVal;
+
+        const fuels = DB.fuels || [];
+        if (!fuels.length) {
+          document.getElementById('siContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد خزانات مضافة بعد.</div>';
+          document.getElementById('siSummaryCards').innerHTML = '';
+          document.getElementById('siOpeningInputs').innerHTML = '';
+          return;
+        }
+
+        // الوارد (التوريدات) لكل نوع وقود في الفترة
+        const suppliesMap = {};
+        (DB.fuelSupplies || []).forEach(function(s) {
+          const d = s.date ? s.date.slice(0,10) : '';
+          if (d >= from && d <= to) {
+            suppliesMap[s.fuelId] = (suppliesMap[s.fuelId] || 0) + (s.qty || 0);
+          }
+        });
+
+        // قراءات المسدسات من الورديات المغلقة في الفترة
+        const nozzleSalesMap = {};
+        (DB.shiftEntries || []).filter(function(e) {
+          if (e.status !== 'closed') return false;
+          const d = e.endTime ? e.endTime.slice(0,10) : '';
+          return d >= from && d <= to;
+        }).forEach(function(e) {
+          const pump = (DB.pumps||[]).find(function(p){ return p.id === e.pumpId; });
+          if (!pump || !pump.nozzles) return;
+          pump.nozzles.forEach(function(nz) {
+            const net = (e.nozzleEnd && e.nozzleEnd[nz.id] ? e.nozzleEnd[nz.id] : 0)
+                      - (e.nozzleStart && e.nozzleStart[nz.id] ? e.nozzleStart[nz.id] : 0)
+                      - (e.nozzleAdj && e.nozzleAdj[nz.id] ? e.nozzleAdj[nz.id] : 0);
+            if (net <= 0) return;
+            nozzleSalesMap[nz.fuelId] = (nozzleSalesMap[nz.fuelId] || 0) + net;
+          });
+        });
+
+        // بناء الـ opening inputs section + حساب القيم
+        let openingHtml = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;">رصيد أول المدة لكل خزان:</div>';
+        openingHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
+
+        let totalOpening = 0, totalSupplied = 0, totalDispatch = 0, totalNozzles = 0, totalClosing = 0, totalDiff = 0;
+        const fuelData = [];
+
+        fuels.forEach(function(f) {
+          const openingInfo  = getOpeningFromMorningReadings(f.id, from);
+          const closingInfo  = getClosingFromMorningReadings(f.id, to);
+          const supplied     = suppliesMap[f.id] || 0;
+          const nozzleSales  = nozzleSalesMap[f.id] || 0;
+
+          // رصيد آخر المدة: من القراءة الصباحية الأقرب لآخر الفترة، أو الرصيد الحالي كـ fallback
+          const closingBalance = closingInfo ? closingInfo.reading : (f.stock || 0);
+          const closingSource  = closingInfo ? ('قراءة ' + closingInfo.date) : 'الرصيد الحالي';
+
+          // رصيد أول المدة: من أقرب قراءة قبل البداية، أو يدوي
+          var openingBalance;
+          var openingSource;
+          var openingAuto = false;
+          if (openingInfo) {
+            openingBalance = openingInfo.reading;
+            openingSource  = 'قراءة ' + openingInfo.date;
+            openingAuto    = true;
+          } else {
+            openingBalance = parseFloat(siOpeningBalances[f.id] || 0) || 0;
+            openingSource  = 'يدوي';
+          }
+
+          const dispatch   = openingBalance + supplied - closingBalance;
+          const diff       = dispatch - nozzleSales;
+
+          fuelData.push({
+            f: f,
+            openingBalance: openingBalance,
+            openingSource: openingSource,
+            openingAuto: openingAuto,
+            supplied: supplied,
+            closingBalance: closingBalance,
+            closingSource: closingSource,
+            nozzleSales: nozzleSales,
+            dispatch: dispatch,
+            diff: diff
+          });
+
+          totalOpening  += openingBalance;
+          totalSupplied += supplied;
+          totalDispatch += dispatch;
+          totalNozzles  += nozzleSales;
+          totalClosing  += closingBalance;
+          totalDiff     += diff;
+
+          var cardBg = openingAuto ? 'background:var(--green-dim);border:1px solid rgba(16,185,129,.3);' : 'background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);';
+          openingHtml += '<div style="' + cardBg + 'border-radius:10px;padding:12px;">'
+            + '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">' + (f.icon||'⛽') + ' ' + f.name + '</div>'
+            + (openingAuto
+              ? '<div style="font-size:11px;color:var(--green);margin-bottom:6px;">✅ من القياس الصباحي (' + openingInfo.date + ')</div>'
+                + '<div style="font-family:var(--mono);font-size:16px;font-weight:900;color:var(--green)">' + fN(openingBalance) + ' ل</div>'
+              : '<div style="font-size:11px;color:var(--amber);margin-bottom:4px;">⚠️ لا توجد قراءة صباحية — أدخل يدوياً:</div>'
+                + '<input type="number" class="form-input" id="siOpen_' + f.id + '" placeholder="رصيد أول المدة (لتر)" value="' + (siOpeningBalances[f.id] || '') + '" min="0" oninput="siOpeningBalances[' + f.id + ']=parseFloat(this.value)||0;renderSupplyInventoryReport();" style="font-family:var(--mono);">'
+            )
+            + '</div>';
+        });
+        openingHtml += '</div>';
+        document.getElementById('siOpeningInputs').innerHTML = openingHtml;
+
+        // بطاقات الملخص
+        const totalDiffColor = totalDiff > 50 ? 'var(--red)' : totalDiff < -50 ? 'var(--green)' : 'var(--text3)';
+        const totalDiffLabel = totalDiff > 50 ? ('عجز ' + fN(Math.abs(totalDiff)) + ' ل')
+                              : totalDiff < -50 ? ('زيادة ' + fN(Math.abs(totalDiff)) + ' ل')
+                              : 'متطابق';
+
+        document.getElementById('siSummaryCards').innerHTML =
+          '<div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:14px;padding:16px;text-align:center;">'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">📦 رصيد أول المدة</div>'
+          + '<div style="font-size:22px;font-weight:900;color:var(--accent2);font-family:var(--mono)">' + fN(totalOpening) + '</div>'
+          + '<div style="font-size:10px;color:var(--text3)">لتر</div></div>'
+
+          + '<div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;text-align:center;">'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">🚛 إجمالي الوارد</div>'
+          + '<div style="font-size:22px;font-weight:900;color:var(--green);font-family:var(--mono)">' + fN(totalSupplied) + '</div>'
+          + '<div style="font-size:10px;color:var(--text3)">لتر</div></div>'
+
+          + '<div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:16px;text-align:center;">'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⛽ التصريف الفعلي</div>'
+          + '<div style="font-size:22px;font-weight:900;color:var(--amber);font-family:var(--mono)">' + fN(totalDispatch) + '</div>'
+          + '<div style="font-size:10px;color:var(--text3)">لتر</div></div>'
+
+          + '<div style="background:' + (totalDiff > 50 ? 'var(--red-dim)' : totalDiff < -50 ? 'var(--green-dim)' : 'var(--surface2)') + ';border:1px solid ' + (totalDiff > 50 ? 'rgba(239,68,68,.3)' : totalDiff < -50 ? 'rgba(16,185,129,.3)' : 'var(--border)') + ';border-radius:14px;padding:16px;text-align:center;">'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⚖️ الفرق</div>'
+          + '<div style="font-size:22px;font-weight:900;color:' + totalDiffColor + ';font-family:var(--mono)">' + fN(Math.abs(totalDiff)) + '</div>'
+          + '<div style="font-size:10px;color:' + totalDiffColor + '">' + totalDiffLabel + '</div></div>';
+
+        // الجدول التفصيلي
+        const rows = fuelData.map(function(d) {
+          const diffColor = d.diff > 50 ? 'var(--red)' : d.diff < -50 ? 'var(--green)' : 'var(--text3)';
+          const diffLabel = d.diff > 50 ? ('عجز ' + fN(Math.abs(d.diff)) + ' ل')
+                          : d.diff < -50 ? ('زيادة ' + fN(Math.abs(d.diff)) + ' ل')
+                          : 'متطابق';
+          return '<tr>'
+            + '<td style="font-weight:700">' + (d.f.icon||'⛽') + ' ' + d.f.name + '</td>'
+            + '<td style="font-family:var(--mono);color:var(--accent2)">' + fN(d.openingBalance) + ' ل'
+              + '<div style="font-size:10px;color:' + (d.openingAuto ? 'var(--green)' : 'var(--amber)') + ';margin-top:2px;">' + d.openingSource + '</div></td>'
+            + '<td style="font-family:var(--mono);color:var(--green)">' + fN(d.supplied) + ' ل</td>'
+            + '<td style="font-family:var(--mono);font-weight:800;color:var(--amber)">' + fN(d.dispatch) + ' ل</td>'
+            + '<td style="font-family:var(--mono);color:var(--purple)">' + fN(d.nozzleSales) + ' ل</td>'
+            + '<td style="font-family:var(--mono);color:var(--text3)">' + fN(d.closingBalance) + ' ل'
+              + '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + d.closingSource + '</div></td>'
+            + '<td style="font-family:var(--mono);font-weight:800;color:' + diffColor + '">' + diffLabel + '</td>'
+            + '</tr>';
+        }).join('');
+
+        document.getElementById('siContent').innerHTML =
+          '<div class="card" style="margin-bottom:16px;">'
+          + '<div class="card-header">📊 تفصيل جرد التموين'
+          + '<span style="font-size:11px;color:var(--text3);font-weight:400;margin-right:8px;">(' + from + ' ← ' + to + ')</span>'
+          + '</div>'
+          + '<div style="overflow-x:auto;"><table class="tbl"><thead><tr>'
+          + '<th>نوع الوقود</th><th>رصيد أول المدة</th><th>الوارد</th>'
+          + '<th>التصريف الفعلي</th><th>قراءات المسدسات</th><th>رصيد آخر المدة</th><th>الفرق</th>'
+          + '</tr></thead><tbody>' + rows
+          + '<tr style="background:var(--surface3);font-weight:900;border-top:2px solid var(--border2);">'
+          + '<td>الإجمالي</td>'
+          + '<td style="font-family:var(--mono);color:var(--accent2)">' + fN(totalOpening) + ' ل</td>'
+          + '<td style="font-family:var(--mono);color:var(--green)">' + fN(totalSupplied) + ' ل</td>'
+          + '<td style="font-family:var(--mono);color:var(--amber)">' + fN(totalDispatch) + ' ل</td>'
+          + '<td style="font-family:var(--mono);color:var(--purple)">' + fN(totalNozzles) + ' ل</td>'
+          + '<td style="font-family:var(--mono);color:var(--text3)">' + fN(totalClosing) + ' ل</td>'
+          + '<td style="font-family:var(--mono);font-weight:900;color:' + totalDiffColor + '">' + totalDiffLabel + '</td>'
+          + '</tr></tbody></table></div></div>'
+
+          + '<div class="card"><div class="card-header">📐 شرح طريقة الحساب</div>'
+          + '<div class="card-body" style="font-size:13px;line-height:2.2;color:var(--text2);">'
+          + '<div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.2);border-radius:10px;padding:14px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:12px;text-align:center;">'
+          + 'التصريف الفعلي = رصيد أول المدة + إجمالي الوارد − رصيد آخر المدة</div>'
+          + '<div><strong>✅ رصيد أول المدة:</strong> يُجلب تلقائياً من أقرب قراءة صباحية قبل تاريخ البداية. لو مفيش قراءة → بتدخله يدوياً.</div>'
+          + '<div><strong>✅ رصيد آخر المدة:</strong> يُجلب من أقرب قراءة صباحية في نهاية الفترة. لو مفيش → الرصيد الحالي في النظام.</div>'
+          + '<div><strong>🚛 الوارد:</strong> إجمالي التورديات المسجلة في النظام خلال الفترة.</div>'
+          + '<div><strong>🔫 قراءات المسدسات:</strong> مجموع ما سجلته عدادات الطلمبات من مبيعات.</div>'
+          + '<div><strong>⚖️ الفرق:</strong> عجز لو التصريف أكبر من المسدسات، زيادة لو أصغر (طبيعي بسبب البخر).</div>'
+          + '</div></div>';
+      }
+
       function getFuelColor(fuelId) {
         const colors = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
         const fuel = (DB.fuels||[]).find(f => f.id == fuelId);
@@ -10621,6 +10909,20 @@
           openEntry.endTime = new Date().toISOString();
           openEntry.nozzleEnd = nozzleEnd;
           openEntry.compTotal = compAmount;
+
+          // ✅ خصم الوقود المباع من stock الخزانات
+          if (pump && pump.nozzles) {
+            pump.nozzles.forEach(function(nz) {
+              const net = (openEntry.nozzleEnd[nz.id] || 0)
+                        - (openEntry.nozzleStart[nz.id] || 0)
+                        - ((openEntry.nozzleAdj && openEntry.nozzleAdj[nz.id]) || 0);
+              if (net <= 0) return;
+              const fuel = DB.fuels.find(function(f){ return f.id == nz.fuelId; });
+              if (fuel) {
+                fuel.stock = Math.max(0, (fuel.stock || 0) - net);
+              }
+            });
+          }
 
           // ✅ الكاش المحصل من العامل → يدخل الخزينة
           const actualCash = openEntry.actualCash || 0;
@@ -11257,7 +11559,7 @@
         // Update deliver button label
         const deliverBtn = document.getElementById(`seDeliverBtn_${pumpId}`);
         if (deliverBtn) {
-          deliverBtn.textContent = `✅ أودّ المبلغ — ${fN(actualCash)} ج (المفتلم)`;
+          deliverBtn.textContent = `✅ فرق الكاش  — ${fN(actualCash)} ج `;
         }
 
         // Auto-save values to open entry
@@ -11510,6 +11812,20 @@
         openEntry.endTime = new Date().toISOString();
         openEntry.nozzleEnd = nozzleEnd;
         openEntry.compTotal = compAmount;
+
+          // ✅ خصم الوقود المباع من stock الخزانات
+          if (pump && pump.nozzles) {
+            pump.nozzles.forEach(function(nz) {
+              const net = (openEntry.nozzleEnd[nz.id] || 0)
+                        - (openEntry.nozzleStart[nz.id] || 0)
+                        - ((openEntry.nozzleAdj && openEntry.nozzleAdj[nz.id]) || 0);
+              if (net <= 0) return;
+              const fuel = DB.fuels.find(function(f){ return f.id == nz.fuelId; });
+              if (fuel) {
+                fuel.stock = Math.max(0, (fuel.stock || 0) - net);
+              }
+            });
+          }
 
         // ✅ الكاش المحصل من العامل → يدخل الخزينة مباشرة
         const actualCash = openEntry.actualCash || 0;
@@ -11983,6 +12299,7 @@
         { id:'companies',     label:'حسابات الشركات',      section:'الإدارة والتشغيل',     icon:'💼' },
         { id:'comptreasury',  label:'خزينة الشركات',       section:'الإدارة والتشغيل',     icon:'🏦' },
         { id:'reports',       label:'التقارير والأرباح',   section:'التقارير',             icon:'📈' },
+        { id:'supply-inventory-report', label:'جرد التموين', section:'التقارير',            icon:'🛢️' },
         { id:'settings',      label:'الإعدادات',           section:'التقارير',             icon:'⚙️' },
       ];
 
