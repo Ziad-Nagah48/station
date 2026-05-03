@@ -1527,6 +1527,88 @@
         <!-- ═══ DASHBOARD ═══ -->
         <div class="page active" id="page-dashboard">
           <div class="stats-grid" id="dashStats"></div>
+
+          <!-- ═══ اختصارات سريعة ═══ -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">⚡ اختصارات سريعة</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+
+              <div onclick="goPage('shifts', document.querySelector('[data-page=shifts]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--green)';this.style.background='var(--green-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">🔄</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">الورديات</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">بدء / إغلاق</div>
+              </div>
+
+              <div onclick="goPage('pos', document.querySelector('[data-page=pos]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--accent)';this.style.background='var(--accent-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">🛒</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">نقطة البيع</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">POS</div>
+              </div>
+
+              <div onclick="goPage('treasury', document.querySelector('[data-page=treasury]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--amber)';this.style.background='var(--amber-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">💰</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">الخزينة</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">الرصيد والحركات</div>
+              </div>
+
+              <div onclick="goPage('expenses', document.querySelector('[data-page=expenses]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--red)';this.style.background='var(--red-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">💸</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">مصروف جديد</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">تسجيل مصروف</div>
+              </div>
+
+              <div onclick="goPage('supply', document.querySelector('[data-page=supply]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--purple)';this.style.background='var(--purple-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">🚛</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">توريد وقود</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">استلام شحنة</div>
+              </div>
+
+              <div onclick="goPage('transfers', document.querySelector('[data-page=transfers]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--accent2)';this.style.background='var(--accent-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">📲</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">التحويلات</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">إنستا / فودافون</div>
+              </div>
+
+              <div onclick="goPage('bank', document.querySelector('[data-page=bank]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--accent)';this.style.background='var(--accent-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">🏦</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">إيداع بنكي</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">الإيداعات</div>
+              </div>
+
+              <div onclick="goPage('reports', document.querySelector('[data-page=reports]'))"
+                style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:center;transition:all 0.15s;box-shadow:var(--shadow);"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--green)';this.style.background='var(--green-dim)'"
+                onmouseout="this.style.transform='';this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:26px;margin-bottom:6px;">📈</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);">التقارير</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:2px;">أرباح وإحصاءات</div>
+              </div>
+
+            </div>
+          </div>
+          <!-- ═══ نهاية الاختصارات ═══ -->
+
           <div class="charts-row">
             <div class="card">
               <div class="card-header">
@@ -1891,7 +1973,7 @@
             <div class="hr-tab" onclick="switchMCTab('payments', this)">
               💳 المدفوعات
             </div>
-            <div class="hr-tab" style="opacity: 0.5">🚛 توريدات الوقود</div>
+            <div class="hr-tab" onclick="switchMCTab('fuelSupplies', this)">🚛 توريدات الوقود</div>
             <div class="hr-tab" style="opacity: 0.5">🏠 الإيجارات المشتركة</div>
             <div class="hr-tab" onclick="switchMCTab('transfers', this)">
               📲 تحويلات فيزا/توم كارد
@@ -2106,6 +2188,49 @@
               <tbody id="mcPaymentsTbody"></tbody>
             </table>
           </div>
+          <!-- Tab Content: Fuel Supplies (توريدات الوقود) -->
+          <div
+            id="mc-tab-fuelSupplies"
+            class="card"
+            style="display: none; border-top-right-radius: 0"
+          >
+            <div class="card-header" style="justify-content: space-between">
+              <div>🚛 توريدات الوقود من الشركة الأم</div>
+              <div style="font-size:12px;color:var(--text3);">
+                فقط التوريدات المرتبطة بـ توتال إنيرجيز
+              </div>
+            </div>
+            <div style="padding:10px 16px;background:var(--accent-dim);border-bottom:1px solid var(--border);font-size:12px;color:var(--accent2);font-weight:600;">
+              ℹ️ هذه التوريدات تُضاف تلقائياً للمديونية عند اختيار "آجل" في صفحة توريد الوقود
+            </div>
+            <div style="padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+              <div style="display:flex;gap:6px;align-items:center;">
+                <label style="font-size:12px;color:var(--text2);">من:</label>
+                <input type="date" class="form-input" id="mcSupFilterFrom" style="font-size:11px;padding:5px 8px;height:auto;width:140px;" />
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <label style="font-size:12px;color:var(--text2);">إلى:</label>
+                <input type="date" class="form-input" id="mcSupFilterTo" style="font-size:11px;padding:5px 8px;height:auto;width:140px;" />
+              </div>
+              <button class="btn btn-sm btn-primary" onclick="renderMCFuelSupplies()">🔍 تصفية</button>
+              <div id="mcSupTotalBadge" style="margin-right:auto;background:var(--red-dim);color:var(--red);padding:5px 14px;border-radius:8px;font-size:13px;font-weight:800;font-family:var(--mono);"></div>
+            </div>
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>التاريخ</th>
+                  <th>الوقود</th>
+                  <th>الكمية (لتر)</th>
+                  <th>السعر/لتر</th>
+                  <th>الإجمالي (ج)</th>
+                  <th>رقم الفاتورة</th>
+                </tr>
+              </thead>
+              <tbody id="mcFuelSuppliesTbody"></tbody>
+            </table>
+          </div>
+
           <!-- Tab Content: Transfers (فيزا/توم كارد) -->
           <div
             id="mc-tab-transfers"
@@ -2419,12 +2544,6 @@
           <div class="pos-layout">
             <div class="pos-left">
               <div class="card">
-                <div class="card-header">⛽ اختر نوع الوقود</div>
-                <div class="card-body">
-                  <div class="fuel-grid" id="fuelGrid"></div>
-                </div>
-              </div>
-              <div class="card">
                 <div class="card-header">📦 المنتجات</div>
                 <div class="card-body">
                   <div class="products-grid" id="productsGrid"></div>
@@ -2482,11 +2601,11 @@
                   <div class="pay-btn sel" onclick="selPay(this, 'cash')">
                     <span class="pay-icon">💵</span>نقدي
                   </div>
-                  <div class="pay-btn" onclick="selPay(this, 'card')">
-                    <span class="pay-icon">💳</span>بطاقة
+                  <div class="pay-btn" onclick="selPay(this, 'instapay')">
+                    <span class="pay-icon">📲</span>انستا باي
                   </div>
-                  <div class="pay-btn" onclick="selPay(this, 'transfer')">
-                    <span class="pay-icon">📲</span>تحويل
+                  <div class="pay-btn" onclick="selPay(this, 'vodafone')">
+                    <span class="pay-icon">📱</span>فودافون كاش
                   </div>
                 </div>
                 <button
@@ -2684,7 +2803,7 @@
             <table class="tbl">
               <thead>
                 <tr>
-                  <th>التاريخ</th><th>الطلمبة</th><th>العامل</th><th>المبلغ</th><th>الحالة</th><th>إجراء</th>
+                  <th>التاريخ</th><th>المصدر</th><th>العامل</th><th>المبلغ</th><th>الحالة</th><th>إجراء</th>
                 </tr>
               </thead>
               <tbody id="trVodafoneTbody"></tbody>
@@ -2701,7 +2820,7 @@
             <table class="tbl">
               <thead>
                 <tr>
-                  <th>التاريخ</th><th>الطلمبة</th><th>العامل</th><th>المبلغ</th><th>الحالة</th><th>إجراء</th>
+                  <th>التاريخ</th><th>المصدر</th><th>العامل</th><th>المبلغ</th><th>الحالة</th><th>إجراء</th>
                 </tr>
               </thead>
               <tbody id="trInstapayTbody"></tbody>
@@ -5405,7 +5524,7 @@
         // Fuel pie
         const fuelMap = {};
         DB.sales
-          .filter((s) => s.type === "fuel")
+          .filter((s) => s.type === "fuel" && new Date(s.date).toDateString() === today)
           .forEach((s) => {
             fuelMap[s.name] = (fuelMap[s.name] || 0) + s.total;
           });
@@ -5553,9 +5672,12 @@
           tabId === "invoices" ? "block" : "none";
         document.getElementById("mc-tab-payments").style.display =
           tabId === "payments" ? "block" : "none";
+        document.getElementById("mc-tab-fuelSupplies").style.display =
+          tabId === "fuelSupplies" ? "block" : "none";
         document.getElementById("mc-tab-transfers").style.display =
           tabId === "transfers" ? "block" : "none";
         if (tabId === "transfers") renderMCTransfers();
+        if (tabId === "fuelSupplies") renderMCFuelSupplies();
       }
 
       function renderMCTransfers() {
@@ -5591,6 +5713,48 @@
                 : `<span style="font-size:11px;color:var(--text3);">تم ${fDateTime(e.confirmedAt||e.date)}</span>`
               }
             </td>
+          </tr>`).join('');
+      }
+
+      function renderMCFuelSupplies() {
+        // فلتر التاريخ
+        const fromEl = document.getElementById('mcSupFilterFrom');
+        const toEl   = document.getElementById('mcSupFilterTo');
+        if (!fromEl.value) {
+          const now = new Date();
+          fromEl.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+          toEl.value   = now.toISOString().slice(0,10);
+        }
+        const from = new Date(fromEl.value);
+        const to   = new Date(toEl.value); to.setHours(23,59,59);
+
+        // جيب توريدات الشركة الأم فقط (supplierId === 0)
+        const supplies = (DB.fuelSupplies || []).filter(s => {
+          const d = new Date(s.date);
+          return s.supplierId === 0 && d >= from && d <= to;
+        }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        const tbody = document.getElementById('mcFuelSuppliesTbody');
+        const badge = document.getElementById('mcSupTotalBadge');
+
+        if (!supplies.length) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px;">لا توجد توريدات من الشركة الأم في هذه الفترة</td></tr>`;
+          badge.textContent = '';
+          return;
+        }
+
+        const grandTotal = supplies.reduce((s,x) => s + x.total, 0);
+        badge.textContent = `الإجمالي: ${fN(grandTotal)} ج`;
+
+        tbody.innerHTML = supplies.map((s, i) => `
+          <tr>
+            <td style="color:var(--text3);font-size:12px;">${i+1}</td>
+            <td style="font-size:12px;">${fDate(s.date)}</td>
+            <td><span style="font-size:15px;">${s.icon||'⛽'}</span> ${s.fuelName}</td>
+            <td style="font-family:var(--mono);font-weight:700;">${fN(s.qty)}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text2);">${fN(s.cost)} ج</td>
+            <td style="font-family:var(--mono);font-weight:800;color:var(--red);">${fN(s.total)} ج</td>
+            <td style="font-size:12px;color:var(--text3);">${s.invoice || '—'}</td>
           </tr>`).join('');
       }
 
@@ -6151,19 +6315,6 @@
       // POS
       // ═══════════════════════════════════════════════════
       function renderPOS() {
-        document.getElementById("fuelGrid").innerHTML =
-          DB.fuels
-            .map(
-              (f) => `
-    <div class="fuel-btn ${selectedFuel?.id === f.id ? "sel" : ""}" onclick="selectFuel(${f.id})">
-      <div class="fuel-icon">${f.icon}</div>
-      <div class="fuel-name">${f.name}</div>
-      <div class="fuel-price">${f.sell} ج/ل</div>
-      <div style="font-size:10px; color:var(--text3); margin-top:2px;">متاح: ${fN(f.stock)} لتر</div>
-    </div>`,
-            )
-            .join("") ||
-          `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text3)">لا توجد خزانات مضافة</div>`;
         document.getElementById("productsGrid").innerHTML =
           DB.products
             .map(
@@ -6305,6 +6456,8 @@
       function completeSale() {
         if (!DB.cart.length) return toast("الفاتورة فارغة", "error");
         const now = new Date().toISOString();
+        const grandTotal = DB.cart.reduce((s, c) => s + c.qty * c.price, 0);
+
         DB.cart.forEach((c) => {
           DB.sales.unshift({
             id: Date.now() + Math.random(),
@@ -6327,12 +6480,31 @@
             if (f) f.stock = Math.max(0, f.stock - c.qty);
           }
         });
+
+        // انستا باي وفودافون كاش → تتسجل معلقة في التحويلات للتأكيد
+        if (payMethod === 'instapay' || payMethod === 'vodafone') {
+          if (!DB.transferEntries) DB.transferEntries = [];
+          DB.transferEntries.push({
+            id: Date.now() + Math.random(),
+            type: payMethod,
+            amount: grandTotal,
+            pumpName: 'نقطة البيع',
+            workerName: DB.currentShift?.supervisor || 'POS',
+            source: 'pos',
+            date: now,
+            status: 'pending',
+          });
+          toast(`⏳ ${payMethod === 'instapay' ? 'انستا باي' : 'فودافون كاش'} — ${fN(grandTotal)} ج في انتظار تأكيد الوصول`, 'info');
+        } else {
+          toast("✅ تم تسجيل البيع بنجاح", "success");
+        }
+
         DB.cart = [];
         saveDB();
         renderCart();
         renderPOS();
         updateLowStockBadge();
-        toast("✅ تم تسجيل البيع بنجاح", "success");
+        renderDashboard();
       }
 
       // ═══════════════════════════════════════════════════
@@ -10800,6 +10972,14 @@
             nozzleStart[nz.id] = nz.counter || 0;
           });
 
+          // ✅ ترحيل العهدة من آخر وردية مغلقة لهذه الطلمبة
+          const prevClosed = DB.shiftEntries
+            .filter(e => e.pumpId === pump.id && e.status === 'closed')
+            .sort((a, b) => new Date(b.endTime) - new Date(a.endTime))[0];
+          const carriedCart = prevClosed && prevClosed.carriedOverItems && prevClosed.carriedOverItems.length > 0
+            ? prevClosed.carriedOverItems.map(item => ({ ...item, productId: parseInt(item.productId) }))
+            : [];
+
           DB.shiftEntries.push({
             id: Date.now() + Math.random(),
             pumpId: pump.id,
@@ -10812,7 +10992,7 @@
             nozzleStart,
             companyRows: [],
             compAmount: 0,
-            productCart: [],
+            productCart: carriedCart,
             productSales: [],
             visa: 0, vodafone: 0, tomcard: 0, stapay: 0, supply: 0,
             actualCash: 0, totalGuns: 0, totalDeductions: 0, logicalCash: 0, diff: 0,
@@ -10823,7 +11003,11 @@
         });
 
         saveDB();
-        toast(`🟢 تم بدء الوردية لـ ${started} طلمبة`, 'success');
+        const totalCarried = DB.shiftEntries
+          .filter(e => e.status === 'open' && e.productCart && e.productCart.length > 0)
+          .reduce((s, e) => s + e.productCart.length, 0);
+        const carryMsg = totalCarried > 0 ? ` | تم ترحيل ${totalCarried} صنف عهدة` : '';
+        toast(`🟢 تم بدء الوردية لـ ${started} طلمبة${carryMsg}`, 'success');
         renderSePumpsTabs();
         seRenderShiftHistory();
       }
@@ -10905,6 +11089,23 @@
             });
           }
 
+          // ✅ عهدة المنتجات — احسب المتبقي وارحّله للوردية الجاية
+          const productCart = openEntry.productCart || [];
+          const productSales = openEntry.productSales || [];
+          const carriedOverItems = [];
+          productCart
+            .filter(cartItem => cartItem.productId && !isNaN(parseInt(cartItem.productId)))
+            .forEach(cartItem => {
+              const soldQty = productSales
+                .filter(s => s.productId == cartItem.productId)
+                .reduce((sum, s) => sum + (s.qty||1), 0);
+              const remaining = Math.max(0, (cartItem.qty||1) - soldQty);
+              if (remaining > 0) {
+                carriedOverItems.push({ productId: parseInt(cartItem.productId), qty: remaining, carriedFrom: openEntry.id });
+              }
+            });
+          openEntry.carriedOverItems = carriedOverItems;
+
           openEntry.status = 'closed';
           openEntry.endTime = new Date().toISOString();
           openEntry.nozzleEnd = nozzleEnd;
@@ -10924,6 +11125,32 @@
             });
           }
 
+          // ✅ تسجيل مبيعات الوقود لكل فوهة في DB.sales عند الإغلاق الجماعي
+          const closeTimeAll = new Date().toISOString();
+          (pump.nozzles || []).forEach(function(nz) {
+            const net = (openEntry.nozzleEnd[nz.id] || 0)
+                      - (openEntry.nozzleStart[nz.id] || 0)
+                      - ((openEntry.nozzleAdj && openEntry.nozzleAdj[nz.id]) || 0);
+            if (net <= 0) return;
+            const fuel = DB.fuels.find(function(f){ return f.id == nz.fuelId; });
+            if (!fuel) return;
+            DB.sales.unshift({
+              id: Date.now() + Math.random(),
+              type: 'fuel',
+              name: fuel.name,
+              fuelId: fuel.id,
+              qty: net,
+              price: fuel.sell,
+              cost: fuel.cost || 0,
+              total: net * fuel.sell,
+              pay: 'shift',
+              date: closeTimeAll,
+              shiftEntryId: openEntry.id,
+              pumpName: pump.name,
+              workerName: openEntry.workerName,
+            });
+          });
+
           // ✅ الكاش المحصل من العامل → يدخل الخزينة
           const actualCash = openEntry.actualCash || 0;
           if (actualCash > 0) {
@@ -10932,13 +11159,14 @@
               type: 'shift_cash',
               name: `كاش وردية — ${pump.name} | ${openEntry.workerName}`,
               qty: 1, price: actualCash, cost: 0, total: actualCash,
-              pay: 'cash', date: new Date().toISOString(),
+              pay: 'cash', date: closeTimeAll,
               shiftEntryId: openEntry.id,
             });
           }
         });
 
         saveDB();
+        renderDashboard();
         toast(`✅ تم إغلاق ${openEntries.length} وردية`, 'success');
         renderSePumpsTabs();
         seRenderShiftHistory();
@@ -11285,45 +11513,152 @@
         const rows = openEntry ? (openEntry.productCart || []) : [];
         rows.push({ productId: '', qty: 1 });
         if (openEntry) openEntry.productCart = rows;
+        saveDB();
         renderSeProdCart(pumpId, rows);
       }
 
       function renderSeProdCart(pumpId, rows) {
         const container = document.getElementById(`seProdCart_${pumpId}`);
         if (!container) return;
+
+        // امسح المحتوى القديم
+        container.innerHTML = '';
+
+        const totEl = document.getElementById(`seProdCartTotal_${pumpId}`);
+
         if (!rows.length) {
-          container.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px;">لم تُسجل عهدة منتجات بعد</div>';
-          const totEl = document.getElementById(`seProdCartTotal_${pumpId}`);
+          const empty = document.createElement('div');
+          empty.style.cssText = 'color:var(--text3);font-size:12px;text-align:center;padding:8px;';
+          empty.textContent = 'لم تُسجل عهدة منتجات بعد';
+          container.appendChild(empty);
           if (totEl) totEl.textContent = '0.00 ج';
           return;
         }
-        // Get sales already committed for this pump to show remaining
+
         const openEntry = DB.shiftEntries.find(e => e.pumpId === pumpId && e.status === 'open');
         const sales = openEntry ? (openEntry.productSales || []) : [];
         let total = 0;
-        container.innerHTML = rows.map((r, i) => {
+
+        rows.forEach((r, i) => {
           const p = DB.products.find(x => x.id == r.productId);
           const qty = r.qty || 1;
-          // Sold qty from this product in current sales
           const soldQty = sales.filter(s => s.productId == r.productId).reduce((s, x) => s + (x.qty||1), 0);
           const remaining = Math.max(0, qty - soldQty);
           const val = p ? p.sell * qty : 0;
           total += val;
-          const carriedOver = r.carriedFrom ? `<span style="font-size:10px;background:var(--accent-dim);color:var(--accent2);padding:1px 6px;border-radius:5px;margin-right:4px;">↩ ترحيل</span>` : '';
-          return `<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;">
-            <select class="form-input form-select" style="flex:2;font-size:12px;" onchange="seProdCartUpdate(${pumpId},${i},'productId',this.value)">
-              <option value="">-- منتج --</option>
-              ${DB.products.map(pr => `<option value="${pr.id}" ${pr.id==r.productId?'selected':''}>${pr.name} — ${fN(pr.sell)} ج</option>`).join('')}
-            </select>
-            <input type="number" class="form-input" value="${qty}" min="1" style="width:65px;text-align:center;" oninput="seProdCartUpdate(${pumpId},${i},'qty',this.value)">
-            <div style="min-width:90px;text-align:center;">
-              ${carriedOver}
-              <div style="font-size:10px;color:var(--text3);">متبقي: <strong style="color:${remaining>0?'var(--green)':'var(--red)'};">${remaining}</strong></div>
-            </div>
-            <span style="font-family:var(--mono);font-size:12px;color:var(--amber);min-width:70px;text-align:left;">${fN(val)} ج</span>
-            <button class="btn btn-sm btn-danger" onclick="seProdCartRemove(${pumpId},${i})">✕</button>
-          </div>`;
-        }).join('');
+
+          // wrapper row
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;align-items:center;';
+
+          // ── SELECT المنتج ──
+          const sel = document.createElement('select');
+          sel.className = 'form-input form-select';
+          sel.style.cssText = 'flex:2;font-size:12px;';
+          const defOpt = document.createElement('option');
+          defOpt.value = '';
+          defOpt.textContent = '-- منتج --';
+          sel.appendChild(defOpt);
+          DB.products.forEach(pr => {
+            const opt = document.createElement('option');
+            opt.value = pr.id;
+            opt.textContent = `${pr.name} — ${fN(pr.sell)} ج`;
+            if (pr.id == r.productId && r.productId !== '') opt.selected = true;
+            sel.appendChild(opt);
+          });
+          sel.addEventListener('change', function() {
+            const entry = DB.shiftEntries.find(e => e.pumpId === pumpId && e.status === 'open');
+            if (!entry || !entry.productCart[i]) return;
+            entry.productCart[i].productId = parseInt(this.value) || '';
+            const product = DB.products.find(x => x.id == entry.productCart[i].productId);
+            if (product) {
+              qtyInp.max = product.stock;
+              if ((parseInt(qtyInp.value) || 1) > product.stock) {
+                qtyInp.value = product.stock || 1;
+                entry.productCart[i].qty = product.stock || 1;
+              }
+            } else {
+              qtyInp.removeAttribute('max');
+            }
+            saveDB();
+            seProdCartRefreshTotals(pumpId, entry.productCart);
+          });
+          row.appendChild(sel);
+
+          // ── INPUT الكمية ──
+          const qtyInp = document.createElement('input');
+          qtyInp.type = 'number';
+          qtyInp.className = 'form-input';
+          qtyInp.value = qty;
+          qtyInp.min = 1;
+          if (p) qtyInp.max = p.stock;
+          qtyInp.style.cssText = 'width:65px;text-align:center;';
+          qtyInp.addEventListener('change', function() {
+            const entry = DB.shiftEntries.find(e => e.pumpId === pumpId && e.status === 'open');
+            if (!entry || !entry.productCart[i]) return;
+            const productId = entry.productCart[i].productId;
+            const product = DB.products.find(x => x.id == productId);
+            const maxStock = product ? product.stock : Infinity;
+            let newQty = parseInt(this.value) || 1;
+            if (newQty > maxStock) {
+              toast(`❌ الكمية تعدت المخزون المتاح (${maxStock} فقط)`, 'error');
+              newQty = maxStock;
+              this.value = newQty;
+            }
+            entry.productCart[i].qty = newQty;
+            saveDB();
+            renderSeProdCart(pumpId, entry.productCart);
+          });
+          row.appendChild(qtyInp);
+
+          // ── معلومات المتبقي ──
+          const info = document.createElement('div');
+          info.style.cssText = 'min-width:90px;text-align:center;';
+          if (r.carriedFrom) {
+            const badge = document.createElement('span');
+            badge.style.cssText = 'font-size:10px;background:var(--accent-dim);color:var(--accent2);padding:1px 6px;border-radius:5px;margin-right:4px;';
+            badge.textContent = '↩ ترحيل';
+            info.appendChild(badge);
+          }
+          const remDiv = document.createElement('div');
+          remDiv.style.cssText = 'font-size:10px;color:var(--text3);';
+          remDiv.innerHTML = `متبقي: <strong style="color:${remaining>0?'var(--green)':'var(--red)'};">${remaining}</strong>`;
+          info.appendChild(remDiv);
+          row.appendChild(info);
+
+          // ── قيمة الصنف ──
+          const valSpan = document.createElement('span');
+          valSpan.id = `seProdCartRowVal_${pumpId}_${i}`;
+          valSpan.style.cssText = 'font-family:var(--mono);font-size:12px;color:var(--amber);min-width:70px;text-align:left;';
+          valSpan.textContent = fN(val) + ' ج';
+          row.appendChild(valSpan);
+
+          // ── زرار الحذف ──
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn btn-sm btn-danger';
+          delBtn.textContent = '✕';
+          delBtn.addEventListener('click', () => seProdCartRemove(pumpId, i));
+          row.appendChild(delBtn);
+
+          container.appendChild(row);
+        });
+
+        if (totEl) totEl.textContent = fN(total) + ' ج';
+      }
+
+      // تحديث الأرقام فقط بدون إعادة رسم الـ DOM
+      function seProdCartRefreshTotals(pumpId, rows) {
+        const openEntry = DB.shiftEntries.find(e => e.pumpId === pumpId && e.status === 'open');
+        const sales = openEntry ? (openEntry.productSales || []) : [];
+        let total = 0;
+        rows.forEach((r, i) => {
+          const p = DB.products.find(x => x.id == r.productId);
+          const qty = r.qty || 1;
+          const val = p ? p.sell * qty : 0;
+          total += val;
+          const valEl = document.getElementById(`seProdCartRowVal_${pumpId}_${i}`);
+          if (valEl) valEl.textContent = fN(val) + ' ج';
+        });
         const totEl = document.getElementById(`seProdCartTotal_${pumpId}`);
         if (totEl) totEl.textContent = fN(total) + ' ج';
       }
@@ -11331,8 +11666,13 @@
       function seProdCartUpdate(pumpId, idx, field, val) {
         const openEntry = DB.shiftEntries.find(e => e.pumpId === pumpId && e.status === 'open');
         const rows = openEntry ? (openEntry.productCart || []) : [];
-        if (rows[idx]) rows[idx][field] = field === 'qty' ? (parseInt(val)||1) : val;
+        if (rows[idx]) {
+          if (field === 'qty') rows[idx][field] = parseInt(val) || 1;
+          else if (field === 'productId') rows[idx][field] = parseInt(val) || '';
+          else rows[idx][field] = val;
+        }
         if (openEntry) openEntry.productCart = rows;
+        saveDB();
         renderSeProdCart(pumpId, rows);
       }
 
@@ -11615,7 +11955,7 @@
           .filter(e => e.pumpId === pumpId && e.status === 'closed')
           .sort((a, b) => new Date(b.endTime) - new Date(a.endTime))[0];
         const carriedCart = prevClosed && prevClosed.carriedOverItems && prevClosed.carriedOverItems.length > 0
-          ? prevClosed.carriedOverItems
+          ? prevClosed.carriedOverItems.map(item => ({ ...item, productId: parseInt(item.productId) }))
           : [];
 
         DB.shiftEntries.push({
@@ -11638,7 +11978,14 @@
         });
 
         saveDB();
-        const carryMsg = carriedCart.length > 0 ? ` | تم ترحيل ${carriedCart.length} صنف من العهدة` : '';
+        let carryMsg = '';
+        if (carriedCart.length > 0) {
+          const names = carriedCart.map(item => {
+            const pr = DB.products.find(x => x.id == item.productId);
+            return pr ? `${pr.name} (${item.qty})` : `منتج#${item.productId} (${item.qty})`;
+          }).join('، ');
+          carryMsg = ` | ترحيل: ${names}`;
+        }
         toast(`🟢 تم بدء وردية الطلمبة: ${pump.name}${carryMsg}`, 'success');
         renderSePumpsTabs();
         seRenderShiftHistory();
@@ -11676,15 +12023,17 @@
         const productCart = openEntry.productCart || [];
         const productSales = openEntry.productSales || [];
         const carriedOverItems = [];
-        productCart.forEach(cartItem => {
-          const soldQty = productSales
-            .filter(s => s.productId == cartItem.productId)
-            .reduce((sum, s) => sum + (s.qty||1), 0);
-          const remaining = Math.max(0, (cartItem.qty||1) - soldQty);
-          if (remaining > 0) {
-            carriedOverItems.push({ productId: cartItem.productId, qty: remaining, carriedFrom: openEntry.id });
-          }
-        });
+        productCart
+          .filter(cartItem => cartItem.productId && !isNaN(parseInt(cartItem.productId)))
+          .forEach(cartItem => {
+            const soldQty = productSales
+              .filter(s => s.productId == cartItem.productId)
+              .reduce((sum, s) => sum + (s.qty||1), 0);
+            const remaining = Math.max(0, (cartItem.qty||1) - soldQty);
+            if (remaining > 0) {
+              carriedOverItems.push({ productId: parseInt(cartItem.productId), qty: remaining, carriedFrom: openEntry.id });
+            }
+          });
         openEntry.carriedOverItems = carriedOverItems;
 
         // ✅ مبيعات الشركات من العهدة → خزينة الشركات للتوزيع (استخدام السعر المحفوظ وقت البيع)
@@ -11827,6 +12176,32 @@
             });
           }
 
+        // ✅ تسجيل مبيعات الوقود لكل فوهة في DB.sales عند الإغلاق
+        const closeTime = new Date().toISOString();
+        (pump.nozzles || []).forEach(function(nz) {
+          const net = (nozzleEnd[nz.id] || 0)
+                    - (openEntry.nozzleStart[nz.id] || 0)
+                    - ((openEntry.nozzleAdj && openEntry.nozzleAdj[nz.id]) || 0);
+          if (net <= 0) return;
+          const fuel = DB.fuels.find(function(f){ return f.id == nz.fuelId; });
+          if (!fuel) return;
+          DB.sales.unshift({
+            id: Date.now() + Math.random(),
+            type: 'fuel',
+            name: fuel.name,
+            fuelId: fuel.id,
+            qty: net,
+            price: fuel.sell,
+            cost: fuel.cost || 0,
+            total: net * fuel.sell,
+            pay: 'shift',
+            date: closeTime,
+            shiftEntryId: openEntry.id,
+            pumpName: pump.name,
+            workerName: openEntry.workerName,
+          });
+        });
+
         // ✅ الكاش المحصل من العامل → يدخل الخزينة مباشرة
         const actualCash = openEntry.actualCash || 0;
         if (actualCash > 0) {
@@ -11835,12 +12210,13 @@
             type: 'shift_cash',
             name: `كاش وردية — ${pump.name} | ${openEntry.workerName}`,
             qty: 1, price: actualCash, cost: 0, total: actualCash,
-            pay: 'cash', date: new Date().toISOString(),
+            pay: 'cash', date: closeTime,
             shiftEntryId: openEntry.id,
           });
         }
 
         saveDB();
+        renderDashboard();
         toast(`✅ تم إغلاق وردية الطلمبة: ${pump.name}`, 'success');
         renderSePumpsTabs();
         seRenderShiftHistory();
@@ -11899,7 +12275,12 @@
           tbody.innerHTML = entries.sort((a,b) => new Date(b.date)-new Date(a.date)).map(e => `
             <tr>
               <td style="font-size:12px;color:var(--text3);">${fDateTime(e.date)}</td>
-              <td><strong>${e.pumpName}</strong></td>
+              <td>
+                ${e.source === 'pos'
+                  ? `<span style="background:var(--accent-dim);color:var(--accent2);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">🛒 نقطة البيع</span>`
+                  : `<strong>${e.pumpName}</strong>`
+                }
+              </td>
               <td>${e.workerName}</td>
               <td style="font-family:var(--mono);font-weight:700;color:var(--accent2);">${fN(e.amount)} ج</td>
               <td>
