@@ -1974,7 +1974,7 @@
               💳 المدفوعات
             </div>
             <div class="hr-tab" onclick="switchMCTab('fuelSupplies', this)">🚛 توريدات الوقود</div>
-            <div class="hr-tab" style="opacity: 0.5">🏠 الإيجارات المشتركة</div>
+            <div class="hr-tab" onclick="switchMCTab('sharedRent', this)">🏠 إضافة / نقص</div>
             <div class="hr-tab" onclick="switchMCTab('transfers', this)">
               📲 تحويلات فيزا/توم كارد
             </div>
@@ -2228,6 +2228,97 @@
                 </tr>
               </thead>
               <tbody id="mcFuelSuppliesTbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Tab Content: Shared Rent (إضافة / نقص) -->
+          <div
+            id="mc-tab-sharedRent"
+            class="card"
+            style="display: none; border-top-right-radius: 0"
+          >
+            <div class="card-header" style="justify-content: space-between">
+              <div>🏠 إضافة / نقص — تعديل المديونية يدوياً</div>
+            </div>
+            <div style="padding:12px 16px;background:var(--purple-dim);border-bottom:1px solid var(--border);font-size:12px;color:var(--purple);font-weight:600;">
+              ℹ️ يمكنك إضافة مبلغ للمديونية (مثل: إيجار مشترك، رسوم، ديون) أو خصم مبلغ منها مع كتابة بيان للحركة
+            </div>
+
+            <!-- Form -->
+            <div style="padding:20px 20px 10px;display:grid;grid-template-columns:1fr 1fr;gap:16px;border-bottom:1px solid var(--border);">
+              <!-- نوع العملية -->
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">نوع العملية</div>
+                <div style="display:flex;gap:8px;">
+                  <button id="srentTypeDebit" onclick="setSRentType('debit')"
+                    style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--red);background:var(--red-dim);color:var(--red);font-weight:800;font-size:13px;cursor:pointer;transition:all 0.15s;">
+                    ➕ إضافة للمديونية
+                  </button>
+                  <button id="srentTypeCredit" onclick="setSRentType('credit')"
+                    style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--text2);font-weight:700;font-size:13px;cursor:pointer;transition:all 0.15s;">
+                    ➖ نقص من المديونية
+                  </button>
+                </div>
+              </div>
+
+              <!-- المبلغ -->
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">المبلغ (ج)</div>
+                <input type="number" class="form-input" id="srentAmount" placeholder="0.00" step="0.5"
+                  style="font-size:16px;font-weight:800;font-family:var(--mono);" />
+              </div>
+
+              <!-- البيان -->
+              <div style="grid-column:1/-1;">
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">بيان / سبب الحركة</div>
+                <input type="text" class="form-input" id="srentNote"
+                  placeholder="مثال: إيجار مشترك يناير، رسوم صيانة، تسوية حساب..."
+                  style="font-size:13px;" />
+              </div>
+
+              <!-- التاريخ -->
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">التاريخ</div>
+                <input type="date" class="form-input" id="srentDate" style="font-size:13px;" />
+              </div>
+
+              <!-- زر الحفظ -->
+              <div style="display:flex;align-items:flex-end;">
+                <button class="btn btn-primary" onclick="saveSRentEntry()"
+                  style="width:100%;padding:11px;font-size:14px;font-weight:800;">
+                  💾 تسجيل الحركة
+                </button>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div style="padding:14px 20px;display:flex;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+              <div style="flex:1;min-width:140px;background:var(--red-dim);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">📈 إجمالي الإضافات</div>
+                <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--red);" id="srentTotalDebit">0.00 ج</div>
+              </div>
+              <div style="flex:1;min-width:140px;background:var(--green-dim);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">📉 إجمالي النقص</div>
+                <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--green);" id="srentTotalCredit">0.00 ج</div>
+              </div>
+              <div style="flex:1;min-width:140px;background:var(--purple-dim);border:1px solid rgba(139,92,246,0.3);border-radius:10px;padding:12px;text-align:center;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">💎 الصافي على المديونية</div>
+                <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--purple);" id="srentTotalNet">0.00 ج</div>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>نوع الحركة</th>
+                  <th>البيان</th>
+                  <th>المبلغ</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="srentTbody"></tbody>
             </table>
           </div>
 
@@ -5103,6 +5194,7 @@
       if (!DB.shiftEntries) DB.shiftEntries = [];
       if (!DB.transferEntries) DB.transferEntries = [];
       if (!DB.motherCompanyPendingTransfers) DB.motherCompanyPendingTransfers = [];
+      if (!DB.sharedRentEntries) DB.sharedRentEntries = [];
       if (!DB.compTreasuryEntries) DB.compTreasuryEntries = [];
       if (!DB.treasuryResets)
         DB.treasuryResets = { sales: null, expenses: null, deposits: null, prodSales: null, fuelSales: null };
@@ -5676,9 +5768,139 @@
           tabId === "fuelSupplies" ? "block" : "none";
         document.getElementById("mc-tab-transfers").style.display =
           tabId === "transfers" ? "block" : "none";
+        document.getElementById("mc-tab-sharedRent").style.display =
+          tabId === "sharedRent" ? "block" : "none";
         if (tabId === "transfers") renderMCTransfers();
         if (tabId === "fuelSupplies") renderMCFuelSupplies();
+        if (tabId === "sharedRent") renderSRentTab();
       }
+
+      // ─── SHARED RENT / MANUAL DEBT ADJUSTMENT ───
+      let srentCurrentType = 'debit'; // 'debit' = إضافة، 'credit' = نقص
+
+      function setSRentType(type) {
+        srentCurrentType = type;
+        const debitBtn = document.getElementById('srentTypeDebit');
+        const creditBtn = document.getElementById('srentTypeCredit');
+        if (type === 'debit') {
+          debitBtn.style.border = '2px solid var(--red)';
+          debitBtn.style.background = 'var(--red-dim)';
+          debitBtn.style.color = 'var(--red)';
+          creditBtn.style.border = '2px solid var(--border)';
+          creditBtn.style.background = 'var(--surface2)';
+          creditBtn.style.color = 'var(--text2)';
+        } else {
+          creditBtn.style.border = '2px solid var(--green)';
+          creditBtn.style.background = 'var(--green-dim)';
+          creditBtn.style.color = 'var(--green)';
+          debitBtn.style.border = '2px solid var(--border)';
+          debitBtn.style.background = 'var(--surface2)';
+          debitBtn.style.color = 'var(--text2)';
+        }
+      }
+
+      function initSRentDate() {
+        const dateEl = document.getElementById('srentDate');
+        if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+      }
+
+      function renderSRentTab() {
+        initSRentDate();
+        setSRentType(srentCurrentType);
+        if (!DB.sharedRentEntries) DB.sharedRentEntries = [];
+        const entries = [...DB.sharedRentEntries].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        const totalDebit  = entries.filter(e => e.type === 'debit').reduce((s,e) => s + e.amount, 0);
+        const totalCredit = entries.filter(e => e.type === 'credit').reduce((s,e) => s + e.amount, 0);
+        const net = totalDebit - totalCredit;
+
+        document.getElementById('srentTotalDebit').textContent  = fN(totalDebit)  + ' ج';
+        document.getElementById('srentTotalCredit').textContent = fN(totalCredit) + ' ج';
+        document.getElementById('srentTotalNet').textContent    = fN(net)          + ' ج';
+
+        const tbody = document.getElementById('srentTbody');
+        if (!entries.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:28px;">لا توجد حركات بعد — أضف أول حركة من الأعلى</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = entries.map(e => `
+          <tr>
+            <td style="font-size:12px;color:var(--text3);">${fDate(e.date)}</td>
+            <td>
+              ${e.type === 'debit'
+                ? `<span style="background:var(--red-dim);color:var(--red);padding:3px 12px;border-radius:6px;font-size:12px;font-weight:700;">➕ إضافة للمديونية</span>`
+                : `<span style="background:var(--green-dim);color:var(--green);padding:3px 12px;border-radius:6px;font-size:12px;font-weight:700;">➖ نقص من المديونية</span>`
+              }
+            </td>
+            <td style="font-size:13px;">${e.note || '—'}</td>
+            <td style="font-family:var(--mono);font-weight:800;font-size:15px;color:${e.type==='debit'?'var(--red)':'var(--green)'};">
+              ${e.type==='debit'?'+':'−'} ${fN(e.amount)} ج
+            </td>
+            <td>
+              <button class="btn btn-sm" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.3);"
+                onclick="deleteSRentEntry(${e.id})">🗑️ حذف</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      function saveSRentEntry() {
+        const amountEl = document.getElementById('srentAmount');
+        const noteEl   = document.getElementById('srentNote');
+        const dateEl   = document.getElementById('srentDate');
+        const amount = parseFloat(amountEl.value);
+        if (!amount || amount <= 0) { toast('❌ أدخل مبلغاً صحيحاً أكبر من صفر', 'error'); return; }
+        const note = noteEl.value.trim();
+        if (!note) { toast('❌ يجب كتابة بيان / سبب الحركة', 'error'); return; }
+        const date = dateEl.value || new Date().toISOString().slice(0,10);
+
+        if (!DB.sharedRentEntries) DB.sharedRentEntries = [];
+
+        const entry = {
+          id: Date.now() + Math.random(),
+          type: srentCurrentType,
+          amount: amount,
+          note: note,
+          date: date + 'T' + new Date().toTimeString().slice(0,8),
+        };
+        DB.sharedRentEntries.push(entry);
+
+        // تأثير على ledger الشركة الأم
+        const ledgerType = srentCurrentType === 'debit' ? 'invoice' : 'payment';
+        const prefix = srentCurrentType === 'debit' ? '➕ إضافة مديونية' : '➖ نقص مديونية';
+        DB.motherCompany.ledger.push({
+          id: Date.now() + Math.random() + 1,
+          type: ledgerType,
+          amount: amount,
+          note: `${prefix}: ${note}`,
+          ref: 'إضافة/نقص يدوي',
+          date: entry.date,
+          details: { source: 'sharedRent' },
+        });
+
+        saveDB();
+        amountEl.value = '';
+        noteEl.value = '';
+        const typeLabel = srentCurrentType === 'debit' ? 'إضافة للمديونية' : 'نقص من المديونية';
+        toast(`✅ تم تسجيل ${typeLabel}: ${fN(amount)} ج — "${note}"`, 'success');
+        renderSRentTab();
+        renderMCStatement();
+      }
+
+      function deleteSRentEntry(id) {
+        if (!DB.sharedRentEntries) return;
+        const entry = DB.sharedRentEntries.find(e => e.id === id);
+        if (!entry) return;
+        const typeLabel = entry.type === 'debit' ? 'إضافة مديونية' : 'نقص مديونية';
+        if (!confirm(`هل تريد حذف هذه الحركة؟\n${typeLabel}: ${fN(entry.amount)} ج\nالبيان: ${entry.note}\n\nسيتم إزالة تأثيرها من كشف حساب الشركة الأم.`)) return;
+        DB.sharedRentEntries = DB.sharedRentEntries.filter(e => e.id !== id);
+        // ازالة من الـ ledger
+        DB.motherCompany.ledger = DB.motherCompany.ledger.filter(l => !(l.details && l.details.source === 'sharedRent' && Math.abs(l.amount - entry.amount) < 0.01 && l.date === entry.date));
+        saveDB();
+        toast('🗑️ تم حذف الحركة بنجاح', 'success');
+        renderSRentTab();
+        renderMCStatement();
+      }
+      // ─── END SHARED RENT ───
 
       function renderMCTransfers() {
         if (!DB.motherCompanyPendingTransfers) DB.motherCompanyPendingTransfers = [];
