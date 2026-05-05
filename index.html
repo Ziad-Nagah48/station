@@ -1523,6 +1523,11 @@
       </div>
 
       <!-- CONTENT -->
+      <!-- بانر القراءة فقط -->
+      <div id="readonlyBanner" style="display:none;align-items:center;gap:10px;padding:8px 22px;background:rgba(14,165,233,0.08);border-bottom:1px solid rgba(14,165,233,0.2);font-size:12.5px;color:var(--accent2);font-weight:600;">
+        <span style="font-size:16px;">👁</span>
+        <span>أنت في وضع <strong>القراءة فقط</strong> — لا يمكنك إجراء أي تعديلات على هذه الصفحة</span>
+      </div>
       <main id="content">
         <!-- ═══ DASHBOARD ═══ -->
         <div class="page active" id="page-dashboard">
@@ -5277,12 +5282,18 @@
         document.getElementById("headerTitle").textContent = t[0];
         document.getElementById("headerSub").textContent = t[1];
 
+        // إظهار / إخفاء بانر القراءة فقط
+        const roBanner = document.getElementById('readonlyBanner');
+        if (roBanner) roBanner.style.display = (canAccess(id) === 'readonly') ? 'flex' : 'none';
+
         const btn = headerBtns[id];
         if (btn) {
           const b = document.getElementById("headerActionBtn");
           b.textContent = btn[0];
           b.setAttribute("onclick", btn[1]);
-          b.style.display = "";
+          // إخفاء زر الإجراء لو الصفحة للقراءة فقط
+          const access = canAccess(id);
+          b.style.display = (access === 'readonly') ? 'none' : '';
         } else {
           document.getElementById("headerActionBtn").style.display = "none";
         }
@@ -8285,28 +8296,23 @@
         }
 
         // ══════════════════════════════════════════
-        // تقرير الأرباح — مفصّل
+        // تقرير الأرباح الشامل — المحطة بالكامل
         // ══════════════════════════════════════════
         if (activeReport === 'profit') {
-          const filtered = DB.sales.filter(s => { const d = new Date(s.date); return d >= fromDate && d <= toDate; });
-          const fuelSales = filtered.filter(s => s.type === 'fuel');
-          const prodSales = filtered.filter(s => s.type === 'product');
 
-          // إيرادات وتكاليف الوقود من الورديات المغلقة في الفترة
+          // ── 1. ربح الوقود من الورديات المغلقة ──
           const closedShifts = (DB.shiftEntries||[]).filter(e => {
             if (e.status !== 'closed') return false;
             const d = e.endTime ? e.endTime.slice(0,10) : '';
             return d >= from && d <= toRaw;
           });
 
-          // حساب ربح الوقود من الورديات (إيراد - تكلفة) — باستخدام السعر المحفوظ وقت الإغلاق
           let fuelRev = 0, fuelCostTotal = 0;
           const fuelByType = {};
           closedShifts.forEach(e => {
             const pump = (DB.pumps||[]).find(p => p.id === e.pumpId);
             if (!pump || !pump.nozzles) return;
             pump.nozzles.forEach(nz => {
-              // استخدم snapshot لو موجود، وإلا fallback للسعر الحالي
               const snap = e.fuelPriceSnapshot?.[nz.fuelId];
               const fuel = snap || (DB.fuels||[]).find(f => f.id == nz.fuelId);
               if (!fuel) return;
@@ -8326,129 +8332,251 @@
           });
           const fuelProfit = fuelRev - fuelCostTotal;
 
-          // ربح المنتجات من DB.sales — السعر محفوظ في سجل البيع نفسه (price, cost)
-          const prodRev = prodSales.reduce((s,x)=>s+x.total,0);
-          const prodCost = prodSales.reduce((s,x)=>s+(x.cost||0)*x.qty,0);
+          // ── 2. ربح المخزن (المنتجات) ──
+          const prodSales = DB.sales.filter(s => {
+            const d = new Date(s.date);
+            return s.type === 'product' && d >= fromDate && d <= toDate;
+          });
+          const prodRev  = prodSales.reduce((s,x) => s + x.total, 0);
+          const prodCost = prodSales.reduce((s,x) => s + (x.cost||0) * x.qty, 0);
           const prodProfit = prodRev - prodCost;
 
-          const totalProfit = fuelProfit + prodProfit;
+          // ── 3. إجمالي الإيرادات قبل المصاريف ──
+          const grossProfit = fuelProfit + prodProfit;
 
-          // ربح كل وردية — باستخدام snapshot
-          const shiftRows = closedShifts.sort((a,b)=>new Date(b.endTime)-new Date(a.endTime)).map(e => {
-            const pump = (DB.pumps||[]).find(p=>p.id===e.pumpId);
-            let sRev=0, sCost=0;
-            let priceChangedWarning = '';
-
-            if (pump?.nozzles) {
-              pump.nozzles.forEach(nz => {
-                const snap = e.fuelPriceSnapshot?.[nz.fuelId];
-                const currentFuel = (DB.fuels||[]).find(f=>f.id==nz.fuelId);
-                const fuel = snap || currentFuel;
-                if (!fuel) return;
-                const net = (e.nozzleEnd?.[nz.id]??0)-(e.nozzleStart?.[nz.id]??0)-(((e.nozzleAdj?.[nz.id] ?? e.nozzleAdjTemp?.[nz.id]) ?? 0));
-                if (net>0) { sRev += net*(fuel.sell||0); sCost += net*(fuel.cost||0); }
-
-                // تحقق هل السعر اتغير بعد إغلاق الوردية
-                if (snap && currentFuel) {
-                  const snapSell = snap.sell || 0;
-                  const currSell = currentFuel.sell || 0;
-                  if (Math.abs(snapSell - currSell) > 0.001) {
-                    priceChangedWarning += `<div style="font-size:10px;color:var(--amber);margin-top:2px">⚠️ ${snap.name||''}: باع بـ <strong>${snapSell} ج</strong> — الحالي <span style="color:var(--text3)">${currSell} ج</span></div>`;
-                  }
-                }
-              });
-            }
-            const sProfit = sRev - sCost;
-            return `<tr>
-              <td style="font-size:12px;color:var(--text3)">${fDate(e.endTime?.slice(0,10)||'')}</td>
-              <td><strong>${e.pumpName}</strong>${priceChangedWarning ? `<div>${priceChangedWarning}</div>` : ''}</td>
-              <td>${e.workerName}</td>
-              <td style="font-family:var(--mono);color:var(--accent2)">${fN(sRev)} ج</td>
-              <td style="font-family:var(--mono);color:var(--text2)">${fN(sCost)} ج</td>
-              <td style="font-family:var(--mono);font-weight:800;color:${sProfit>=0?'var(--green)':'var(--red)'}">${fN(sProfit)} ج</td>
-            </tr>`;
-          }).join('') || '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text3)">لا توجد ورديات مغلقة في هذه الفترة</td></tr>';
-
-          // ربح كل نوع وقود
-          const fuelTypeRows = Object.values(fuelByType).map(f=>`<tr>
-            <td style="font-weight:700">⛽ ${f.name}</td>
-            <td style="font-family:var(--mono)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
-            <td style="font-family:var(--mono);color:var(--accent2)">${fN(f.rev)} ج</td>
-            <td style="font-family:var(--mono);color:var(--text2)">${fN(f.cost)} ج</td>
-            <td style="font-family:var(--mono);font-weight:800;color:${(f.rev-f.cost)>=0?'var(--green)':'var(--red)'}">${fN(f.rev-f.cost)} ج</td>
-          </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text3)">لا توجد بيانات</td></tr>';
-
-          // ربح كل منتج
-          const prodByName = {};
-          prodSales.forEach(s=>{
-            if (!prodByName[s.name]) prodByName[s.name]={qty:0,rev:0,cost:0};
-            prodByName[s.name].qty += s.qty;
-            prodByName[s.name].rev += s.total;
-            prodByName[s.name].cost += (s.cost||0)*s.qty;
+          // ── 4. المصاريف في الفترة ──
+          const expensesInPeriod = (DB.expenses||[]).filter(e => {
+            const d = e.date ? e.date.slice(0,10) : '';
+            return d >= from && d <= toRaw;
           });
-          const prodRows = Object.entries(prodByName).map(([name,v])=>`<tr>
-            <td style="font-weight:700">📦 ${name}</td>
-            <td style="font-family:var(--mono)">${v.qty}</td>
-            <td style="font-family:var(--mono);color:var(--accent2)">${fN(v.rev)} ج</td>
-            <td style="font-family:var(--mono);color:var(--text2)">${fN(v.cost)} ج</td>
-            <td style="font-family:var(--mono);font-weight:800;color:${(v.rev-v.cost)>=0?'var(--green)':'var(--red)'}">${fN(v.rev-v.cost)} ج</td>
-          </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text3)">لا توجد مبيعات منتجات</td></tr>';
+          const totalExpenses = expensesInPeriod.reduce((s,e) => s + e.amount, 0);
+
+          // تجميع المصاريف حسب الفئة
+          const expByCat = {};
+          expensesInPeriod.forEach(e => {
+            const cat = e.cat || 'أخرى';
+            if (!expByCat[cat]) expByCat[cat] = 0;
+            expByCat[cat] += e.amount;
+          });
+
+          // ── 5. صافي ربح المحطة بعد المصاريف ──
+          const netProfit = grossProfit - totalExpenses;
+
+          // ── 6. رصيد الخزينة النقدي الحالي ──
+          const allCashSales = DB.sales.filter(s => s.pay === 'cash').reduce((sum,s) => sum + s.total, 0);
+          const allCashExp   = (DB.expenses||[]).reduce((sum,e) => sum + e.amount, 0);
+          const allBankDep   = (DB.bankTransactions||[]).filter(t => t.type === 'deposit' || t.type === 'deposit_mc').reduce((sum,t) => sum + t.amount, 0);
+          const allBankWith  = (DB.bankTransactions||[]).filter(t => t.type === 'withdraw').reduce((sum,t) => sum + t.amount, 0);
+          const allFuelCash  = (DB.fuelSupplies||[]).filter(s => s.payMethod === 'cash').reduce((sum,s) => sum + s.total, 0);
+          const purchCash    = (DB.purchases||[]).filter(p => p.payMethod === 'cash' || p.payMethod === 'partial').reduce((sum,p) => sum + p.paid, 0);
+          const cashInSafe   = allCashSales + allBankWith - allCashExp - allBankDep - allFuelCash - purchCash;
+
+          // ── 7. الإيداعات البنكية في الفترة ──
+          const bankDepositsInPeriod = (DB.bankTransactions||[]).filter(t => {
+            const d = t.date ? t.date.slice(0,10) : '';
+            return (t.type === 'deposit' || t.type === 'deposit_mc') && d >= from && d <= toRaw;
+          });
+          const totalBankDep = bankDepositsInPeriod.reduce((s,t) => s + t.amount, 0);
+          const totalMCDep   = bankDepositsInPeriod.filter(t => t.type === 'deposit_mc').reduce((s,t) => s + t.amount, 0);
+          const totalOtherDep= totalBankDep - totalMCDep;
+
+          // ── 8. وضع الشركة الأم (مديونية أو رصيد لصالحنا) ──
+          const ledger = DB.motherCompany?.ledger || [];
+          let mcDebt = 0;
+          let mcTotalInvoices = 0;
+          let mcTotalPaid = 0;
+          ledger.forEach(item => {
+            if (item.type === 'invoice' && item.details?.payMethod === 'آجل') {
+              mcDebt += item.amount;
+              mcTotalInvoices += item.amount;
+            } else if (item.type === 'payment') {
+              mcDebt -= item.amount;
+              mcTotalPaid += item.amount;
+            }
+          });
+          // مشتريات مخزن آجلة من الشركة الأم (purchases)
+          (DB.purchases||[]).filter(p => p.supplierId === 0 && p.remaining > 0).forEach(p => {
+            mcDebt += p.remaining;
+          });
+
+          // ── 9. تفاصيل ربح المنتجات حسب الصنف ──
+          const prodByName = {};
+          prodSales.forEach(s => {
+            if (!prodByName[s.name]) prodByName[s.name] = {qty:0, rev:0, cost:0};
+            prodByName[s.name].qty  += s.qty;
+            prodByName[s.name].rev  += s.total;
+            prodByName[s.name].cost += (s.cost||0) * s.qty;
+          });
+
+          // ── RENDER ──
+          const fuelTypeRows = Object.values(fuelByType).map(f => {
+            const fp = f.rev - f.cost;
+            return `<tr>
+              <td style="font-weight:700">⛽ ${f.name}</td>
+              <td style="font-family:var(--mono)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
+              <td style="font-family:var(--mono);color:var(--accent2)">${fN(f.rev)} ج</td>
+              <td style="font-family:var(--mono);color:var(--text2)">${fN(f.cost)} ج</td>
+              <td style="font-family:var(--mono);font-weight:800;color:${fp>=0?'var(--green)':'var(--red)'}">${fN(fp)} ج</td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text3)">لا توجد بيانات وقود</td></tr>`;
+
+          const prodRows = Object.entries(prodByName).map(([name,v]) => {
+            const pp = v.rev - v.cost;
+            return `<tr>
+              <td style="font-weight:700">📦 ${name}</td>
+              <td style="font-family:var(--mono)">${v.qty}</td>
+              <td style="font-family:var(--mono);color:var(--accent2)">${fN(v.rev)} ج</td>
+              <td style="font-family:var(--mono);color:var(--text2)">${fN(v.cost)} ج</td>
+              <td style="font-family:var(--mono);font-weight:800;color:${pp>=0?'var(--green)':'var(--red)'}">${fN(pp)} ج</td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text3)">لا توجد مبيعات منتجات</td></tr>`;
+
+          const expCatRows = Object.entries(expByCat).map(([cat,amt]) =>
+            `<tr>
+              <td style="font-weight:600">🔖 ${cat}</td>
+              <td style="font-family:var(--mono);color:var(--red);font-weight:700">${fN(amt)} ج</td>
+            </tr>`
+          ).join('') || `<tr><td colspan="2" style="text-align:center;padding:12px;color:var(--text3)">لا توجد مصاريف في هذه الفترة</td></tr>`;
+
+          const mcStatusColor = mcDebt > 0 ? 'var(--red)' : 'var(--green)';
+          const mcStatusLabel = mcDebt > 0 ? `مدينون للشركة الأم بـ ${fN(mcDebt)} ج` : (mcDebt < 0 ? `رصيد لصالحنا ${fN(Math.abs(mcDebt))} ج` : 'الحساب متوازن ✅');
+          const mcStatusIcon  = mcDebt > 0 ? '🔴' : (mcDebt < 0 ? '🟢' : '⚪');
 
           out.innerHTML = `
-            <!-- ملخص عام -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
-              <div style="background:var(--green-dim);border:2px solid rgba(16,185,129,.4);border-radius:14px;padding:16px;text-align:center">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">💰 صافي الربح الإجمالي</div>
-                <div style="font-size:24px;font-weight:900;color:var(--green);font-family:var(--mono)">${fN(totalProfit)}</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:2px">ج.م</div>
-              </div>
-              <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:16px;text-align:center">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">⛽ ربح الوقود</div>
-                <div style="font-size:22px;font-weight:800;color:var(--amber);font-family:var(--mono)">${fN(fuelProfit)}</div>
-                <div style="font-size:10px;color:var(--text3)">إيراد: ${fN(fuelRev)} ج</div>
-              </div>
-              <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:14px;padding:16px;text-align:center">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">📦 ربح المنتجات</div>
-                <div style="font-size:22px;font-weight:800;color:var(--purple);font-family:var(--mono)">${fN(prodProfit)}</div>
-                <div style="font-size:10px;color:var(--text3)">إيراد: ${fN(prodRev)} ج</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:6px">📋 عدد الورديات</div>
-                <div style="font-size:22px;font-weight:800;color:var(--accent2);font-family:var(--mono)">${closedShifts.length}</div>
-                <div style="font-size:10px;color:var(--text3)">وردية مغلقة</div>
+            <!-- ═══ القسم الأول: ملخص الأرباح ═══ -->
+            <div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:16px;padding:20px 24px;margin-bottom:20px;color:#fff">
+              <div style="font-size:13px;font-weight:700;opacity:.6;letter-spacing:1px;margin-bottom:14px">📊 ملخص الأرباح الشامل للفترة من ${from} إلى ${toRaw}</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+                <div style="background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);border-radius:12px;padding:16px;text-align:center">
+                  <div style="font-size:11px;opacity:.7;margin-bottom:6px">⛽ ربح الوقود (صافي)</div>
+                  <div style="font-size:22px;font-weight:900;color:#34d399;font-family:var(--mono)">${fN(fuelProfit)}</div>
+                  <div style="font-size:10px;opacity:.5;margin-top:3px">إيراد ${fN(fuelRev)} — تكلفة ${fN(fuelCostTotal)}</div>
+                </div>
+                <div style="background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.4);border-radius:12px;padding:16px;text-align:center">
+                  <div style="font-size:11px;opacity:.7;margin-bottom:6px">📦 ربح المخزن (صافي)</div>
+                  <div style="font-size:22px;font-weight:900;color:#a78bfa;font-family:var(--mono)">${fN(prodProfit)}</div>
+                  <div style="font-size:10px;opacity:.5;margin-top:3px">إيراد ${fN(prodRev)} — تكلفة ${fN(prodCost)}</div>
+                </div>
+                <div style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:12px;padding:16px;text-align:center">
+                  <div style="font-size:11px;opacity:.7;margin-bottom:6px">💸 إجمالي المصاريف</div>
+                  <div style="font-size:22px;font-weight:900;color:#f87171;font-family:var(--mono)">${fN(totalExpenses)}</div>
+                  <div style="font-size:10px;opacity:.5;margin-top:3px">${expensesInPeriod.length} بند مصروف</div>
+                </div>
+                <div style="background:rgba(14,165,233,.2);border:2px solid rgba(14,165,233,.6);border-radius:12px;padding:16px;text-align:center">
+                  <div style="font-size:11px;opacity:.7;margin-bottom:6px">💰 صافي ربح المحطة</div>
+                  <div style="font-size:26px;font-weight:900;color:${netProfit>=0?'#38bdf8':'#f87171'};font-family:var(--mono)">${fN(netProfit)}</div>
+                  <div style="font-size:10px;opacity:.5;margin-top:3px">بعد خصم كل المصاريف</div>
+                </div>
               </div>
             </div>
 
-            <!-- ربح حسب نوع الوقود -->
+            <!-- ═══ القسم الثاني: معادلة الربح ═══ -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;direction:rtl">
+              <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:12px">🧮 معادلة الربح</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-family:var(--mono);font-weight:700">
+                <span style="background:rgba(16,185,129,.12);color:var(--green);padding:6px 12px;border-radius:8px">${fN(fuelProfit)} ج (وقود)</span>
+                <span style="color:var(--text3)">+</span>
+                <span style="background:rgba(139,92,246,.12);color:var(--purple);padding:6px 12px;border-radius:8px">${fN(prodProfit)} ج (مخزن)</span>
+                <span style="color:var(--text3)">−</span>
+                <span style="background:rgba(239,68,68,.12);color:var(--red);padding:6px 12px;border-radius:8px">${fN(totalExpenses)} ج (مصاريف)</span>
+                <span style="color:var(--text3)">=</span>
+                <span style="background:${netProfit>=0?'rgba(14,165,233,.12)':'rgba(239,68,68,.12)'};color:${netProfit>=0?'var(--accent2)':'var(--red)'};padding:6px 16px;border-radius:8px;font-size:15px">${fN(netProfit)} ج</span>
+              </div>
+            </div>
+
+            <!-- ═══ القسم الثالث: ربح الوقود حسب النوع ═══ -->
             <div class="card" style="margin-bottom:16px">
               <div class="card-header">⛽ ربح الوقود حسب النوع</div>
               <div style="overflow-x:auto">
                 <table class="tbl">
                   <thead><tr><th>نوع الوقود</th><th>الكمية (لتر)</th><th>الإيراد</th><th>التكلفة</th><th>صافي الربح</th></tr></thead>
                   <tbody>${fuelTypeRows}</tbody>
+                  <tfoot><tr style="font-weight:800;background:var(--surface2)">
+                    <td colspan="2">الإجمالي</td>
+                    <td style="font-family:var(--mono);color:var(--accent2)">${fN(fuelRev)} ج</td>
+                    <td style="font-family:var(--mono);color:var(--text2)">${fN(fuelCostTotal)} ج</td>
+                    <td style="font-family:var(--mono);color:${fuelProfit>=0?'var(--green)':'var(--red)'};font-weight:900">${fN(fuelProfit)} ج</td>
+                  </tr></tfoot>
                 </table>
               </div>
             </div>
 
-            <!-- ربح حسب الوردية -->
+            <!-- ═══ القسم الرابع: ربح المخزن حسب الصنف ═══ -->
             <div class="card" style="margin-bottom:16px">
-              <div class="card-header">🔄 ربح الوقود حسب الوردية</div>
-              <div style="overflow-x:auto">
-                <table class="tbl">
-                  <thead><tr><th>التاريخ</th><th>الطلمبة</th><th>العامل</th><th>الإيراد</th><th>التكلفة</th><th>صافي الربح</th></tr></thead>
-                  <tbody>${shiftRows}</tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- ربح المنتجات -->
-            <div class="card">
-              <div class="card-header">📦 ربح المنتجات حسب الصنف</div>
+              <div class="card-header">📦 ربح المخزن حسب الصنف</div>
               <div style="overflow-x:auto">
                 <table class="tbl">
                   <thead><tr><th>الصنف</th><th>الكمية</th><th>الإيراد</th><th>التكلفة</th><th>صافي الربح</th></tr></thead>
                   <tbody>${prodRows}</tbody>
+                  <tfoot><tr style="font-weight:800;background:var(--surface2)">
+                    <td colspan="2">الإجمالي</td>
+                    <td style="font-family:var(--mono);color:var(--accent2)">${fN(prodRev)} ج</td>
+                    <td style="font-family:var(--mono);color:var(--text2)">${fN(prodCost)} ج</td>
+                    <td style="font-family:var(--mono);color:${prodProfit>=0?'var(--green)':'var(--red)'};font-weight:900">${fN(prodProfit)} ج</td>
+                  </tr></tfoot>
                 </table>
+              </div>
+            </div>
+
+            <!-- ═══ القسم الخامس: تفاصيل المصاريف ═══ -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">💸 المصاريف حسب الفئة</div>
+              <div style="overflow-x:auto">
+                <table class="tbl">
+                  <thead><tr><th>الفئة</th><th>الإجمالي</th></tr></thead>
+                  <tbody>${expCatRows}</tbody>
+                  <tfoot><tr style="font-weight:800;background:var(--surface2)">
+                    <td>إجمالي المصاريف</td>
+                    <td style="font-family:var(--mono);color:var(--red);font-weight:900">${fN(totalExpenses)} ج</td>
+                  </tr></tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- ═══ القسم السادس: الموقف المالي الكامل ═══ -->
+            <div style="border:2px solid rgba(14,165,233,.35);border-radius:16px;overflow:hidden;margin-bottom:20px">
+              <div style="background:var(--accent-dim);padding:14px 18px;border-bottom:1px solid rgba(14,165,233,.2)">
+                <div style="font-size:13px;font-weight:800;color:var(--accent2)">🏦 الموقف المالي الكامل للمحطة</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
+                <!-- الخزينة النقدية -->
+                <div style="padding:18px;border-left:1px solid var(--border);text-align:center">
+                  <div style="font-size:22px;margin-bottom:8px">💵</div>
+                  <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">الخزينة النقدية (فلوس موجودة)</div>
+                  <div style="font-size:24px;font-weight:900;color:${cashInSafe>=0?'var(--green)':'var(--red)'};font-family:var(--mono)">${fN(Math.abs(cashInSafe))}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px">ج.م — ${cashInSafe>=0?'رصيد دائن ✅':'عجز ⚠️'}</div>
+                </div>
+                <!-- الإيداعات البنكية في الفترة -->
+                <div style="padding:18px;border-left:1px solid var(--border);text-align:center">
+                  <div style="font-size:22px;margin-bottom:8px">🏦</div>
+                  <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">إيداعات بنكية في الفترة</div>
+                  <div style="font-size:24px;font-weight:900;color:var(--accent2);font-family:var(--mono)">${fN(totalBankDep)}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:4px">للشركة الأم: ${fN(totalMCDep)} ج | أخرى: ${fN(totalOtherDep)} ج</div>
+                </div>
+                <!-- وضع الشركة الأم -->
+                <div style="padding:18px;text-align:center">
+                  <div style="font-size:22px;margin-bottom:8px">${mcStatusIcon}</div>
+                  <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">وضع الشركة الأم</div>
+                  <div style="font-size:20px;font-weight:900;color:${mcStatusColor};font-family:var(--mono)">${fN(Math.abs(mcDebt))}</div>
+                  <div style="font-size:11px;color:${mcStatusColor};margin-top:4px;font-weight:600">${mcStatusLabel}</div>
+                </div>
+              </div>
+              <!-- تفاصيل الشركة الأم -->
+              <div style="padding:14px 18px;background:var(--surface2);border-top:1px solid var(--border)">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12px">
+                  <div style="text-align:center">
+                    <div style="color:var(--text3);margin-bottom:2px">إجمالي الفواتير المستحقة</div>
+                    <div style="font-family:var(--mono);font-weight:800;color:var(--red)">${fN(mcTotalInvoices)} ج</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="color:var(--text3);margin-bottom:2px">إجمالي المدفوع للشركة الأم</div>
+                    <div style="font-family:var(--mono);font-weight:800;color:var(--green)">${fN(mcTotalPaid)} ج</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="color:var(--text3);margin-bottom:2px">الصافي (${mcDebt>0?'مدين':'دائن'})</div>
+                    <div style="font-family:var(--mono);font-weight:800;color:${mcStatusColor}">${fN(Math.abs(mcDebt))} ج</div>
+                  </div>
+                </div>
               </div>
             </div>`;
           return;
@@ -8456,6 +8584,7 @@
 
         // ══════════════════════════════════════════
         // الجرد الشامل (تقرير المخزون)
+
         // ══════════════════════════════════════════
         if (activeReport === 'inventory') {
           // ── جرد الخزانات والوقود ──
@@ -11202,6 +11331,12 @@
             ? prevClosed.carriedOverItems.map(item => ({ ...item, productId: parseInt(item.productId) }))
             : [];
 
+          // ✅ حفظ snapshot لأسعار الوقود وقت فتح الوردية (لاكتشاف تغيير السعر أثناء الوردية)
+          const startFuelPriceSnapshot = {};
+          (DB.fuels || []).forEach(f => {
+            startFuelPriceSnapshot[f.id] = { sell: f.sell || 0, cost: f.cost || 0, name: f.name };
+          });
+
           DB.shiftEntries.push({
             id: Date.now() + Math.random(),
             pumpId: pump.id,
@@ -11220,6 +11355,7 @@
             actualCash: 0, totalGuns: 0, totalDeductions: 0, logicalCash: 0, diff: 0,
             shiftGroupId: groupId,
             shiftGroupNum: groupNum,
+            startFuelPriceSnapshot,
           });
           started++;
         });
@@ -12980,7 +13116,19 @@
         const rolePerms = perms[currentUser.role] || {};
         document.querySelectorAll('.nav-item[data-page]').forEach(el => {
           const page = el.getAttribute('data-page');
-          el.style.display = rolePerms[page] ? '' : 'none';
+          const val = rolePerms[page];
+          el.style.display = val ? '' : 'none';
+          // إضافة أيقونة القراءة فقط في القائمة الجانبية
+          const existingIcon = el.querySelector('.readonly-icon');
+          if (existingIcon) existingIcon.remove();
+          if (val === 'readonly') {
+            const icon = document.createElement('span');
+            icon.className = 'readonly-icon';
+            icon.title = 'قراءة فقط';
+            icon.style.cssText = 'font-size:11px;margin-right:auto;opacity:0.5;';
+            icon.textContent = '👁';
+            el.appendChild(icon);
+          }
         });
       }
 
@@ -12989,7 +13137,13 @@
         if (currentUser.role === 'manager') return true;
         const perms = getPerms();
         const rolePerms = perms[currentUser.role] || {};
-        return !!rolePerms[pageId];
+        const val = rolePerms[pageId];
+        if (val === 'readonly') return 'readonly';
+        return !!val;
+      }
+
+      function isReadOnly(pageId) {
+        return canAccess(pageId) === 'readonly';
       }
 
       function openUserMenu() {
@@ -13035,7 +13189,7 @@
         let html = `
           <div style="margin-bottom:20px;padding:14px;background:var(--accent-dim);border-radius:10px;border:1px solid rgba(14,165,233,0.2);">
             <div style="font-weight:800;font-size:13px;color:var(--accent2);margin-bottom:4px;">ℹ️ ملاحظة</div>
-            <div style="font-size:12px;color:var(--text2);">المدير يملك صلاحية كاملة على جميع الصفحات دائماً. يمكنك هنا تحديد ما يمكن للمشرف والعامل الوصول إليه، وتغيير كلمات المرور.</div>
+            <div style="font-size:12px;color:var(--text2);">المدير يملك صلاحية كاملة على جميع الصفحات دائماً. يمكنك هنا تحديد ما يمكن للمشرف والعامل الوصول إليه، وتغيير كلمات المرور.</div><div style="margin-top:8px;font-size:11.5px;color:var(--text3);">اضغط على الزر لتغيير الصلاحية: <span style="background:var(--green-dim);color:var(--green);padding:1px 7px;border-radius:6px;font-weight:700;">✅ مسموح</span> ← <span style="background:rgba(14,165,233,0.12);color:var(--accent2);padding:1px 7px;border-radius:6px;font-weight:700;">👁 قراءة فقط</span> ← <span style="background:var(--red-dim);color:var(--red);padding:1px 7px;border-radius:6px;font-weight:700;">🚫 محظور</span></div>
           </div>`;
 
         html += `<div class="perm-section"><div class="perm-section-title">👥 إدارة المستخدمين وكلمات المرور</div>`;
@@ -13072,14 +13226,21 @@
             const pagesInSec = PAGE_DEFS.filter(p => p.section === sec);
             html += `<div style="font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 6px;padding-right:4px;">${sec}</div>`;
             pagesInSec.forEach(page => {
-              const hasAccess = perms[role] ? !!perms[role][page.id] : false;
+              const val = perms[role] ? perms[role][page.id] : false;
+              const isOn = val === true;
+              const isRO = val === 'readonly';
+              const cls = isRO ? 'readonly-perm' : (isOn ? 'on' : 'off');
+              const lbl = isRO ? '👁 قراءة فقط' : (isOn ? '✅ مسموح' : '🚫 محظور');
+              const dataVal = isRO ? 'readonly' : (isOn ? 'on' : 'off');
+              const extraStyle = isRO ? 'style="background:rgba(14,165,233,0.12);color:var(--accent2);border:1px solid rgba(14,165,233,0.3);"' : '';
               html += `
                 <div class="perm-row">
                   <div><div class="perm-label">${page.icon} ${page.label}</div></div>
                   <div class="toggle-wrap">
-                    <button class="perm-toggle ${hasAccess?'on':'off'}" id="perm_${role}_${page.id}"
+                    <button class="perm-toggle ${cls}" id="perm_${role}_${page.id}"
+                      data-val="${dataVal}" ${extraStyle}
                       onclick="togglePerm('${role}','${page.id}',this)">
-                      ${hasAccess ? '✅ مسموح' : '🚫 محظور'}
+                      ${lbl}
                     </button>
                   </div>
                 </div>`;
@@ -13092,10 +13253,21 @@
       }
 
       function togglePerm(role, pageId, btn) {
-        const isOn = btn.classList.contains('on');
-        btn.classList.toggle('on', !isOn);
-        btn.classList.toggle('off', isOn);
-        btn.textContent = isOn ? '🚫 محظور' : '✅ مسموح';
+        // دورة ثلاثية: محظور → مسموح → قراءة فقط → محظور
+        if (btn.classList.contains('off')) {
+          btn.classList.remove('off'); btn.classList.add('on');
+          btn.textContent = '✅ مسموح'; btn.dataset.val = 'on';
+        } else if (btn.dataset.val === 'on') {
+          btn.classList.remove('on'); btn.classList.add('readonly-perm');
+          btn.textContent = '👁 قراءة فقط'; btn.dataset.val = 'readonly';
+          btn.style.background = 'rgba(14,165,233,0.12)';
+          btn.style.color = 'var(--accent2)';
+          btn.style.border = '1px solid rgba(14,165,233,0.3)';
+        } else {
+          btn.classList.remove('readonly-perm'); btn.classList.add('off');
+          btn.textContent = '🚫 محظور'; btn.dataset.val = 'off';
+          btn.style.background = ''; btn.style.color = ''; btn.style.border = '';
+        }
       }
 
       function savePermissions() {
@@ -13104,7 +13276,10 @@
           if (!perms[role]) perms[role] = {};
           PAGE_DEFS.forEach(page => {
             const btn = document.getElementById(`perm_${role}_${page.id}`);
-            if (btn) perms[role][page.id] = btn.classList.contains('on');
+            if (!btn) return;
+            const val = btn.dataset.val;
+            if (val === 'readonly') perms[role][page.id] = 'readonly';
+            else perms[role][page.id] = btn.classList.contains('on');
           });
         });
         localStorage.setItem(PERMS_KEY, JSON.stringify(perms));
