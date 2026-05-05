@@ -41,7 +41,62 @@
         --radius-lg: 16px;
         --shadow: 0 1px 3px rgba(0, 0, 0, 0.07), 0 4px 16px rgba(0, 0, 0, 0.05);
         --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --ui-base: 14px;
       }
+
+      /* ─────────── Dark Theme ─────────── */
+      html[data-theme="dark"] {
+        --bg: #0b1220;
+        --surface: #111a2e;
+        --surface2: #182338;
+        --surface3: #1f2c44;
+        --border: #2a3854;
+        --border2: #3b4a6b;
+        --accent: #38bdf8;
+        --accent2: #7dd3fc;
+        --accent-dim: rgba(56, 189, 248, 0.14);
+        --accent-glow: rgba(56, 189, 248, 0.3);
+        --green: #34d399;
+        --green-dim: rgba(52, 211, 153, 0.14);
+        --red: #f87171;
+        --red-dim: rgba(248, 113, 113, 0.14);
+        --amber: #fbbf24;
+        --amber-dim: rgba(251, 191, 36, 0.14);
+        --purple: #a78bfa;
+        --purple-dim: rgba(167, 139, 250, 0.14);
+        --text: #e2e8f0;
+        --text2: #94a3b8;
+        --text3: #64748b;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55);
+      }
+      /* Inputs & form fields in dark mode */
+      html[data-theme="dark"] input,
+      html[data-theme="dark"] select,
+      html[data-theme="dark"] textarea,
+      html[data-theme="dark"] .form-input {
+        background-color: var(--surface2) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+      }
+      html[data-theme="dark"] input::placeholder,
+      html[data-theme="dark"] textarea::placeholder {
+        color: var(--text3);
+        opacity: 0.7;
+      }
+      /* Date / time pickers icons turn white-ish in dark */
+      html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+      html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+      html[data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.85);
+      }
+
+      /* ─────────── UI Font Size Scale ─────────── */
+      html[data-uisize="small"]    { --ui-base: 12.5px; }
+      html[data-uisize="mid"]      { --ui-base: 14px; }
+      html[data-uisize="big"]      { --ui-base: 16px; }
+      html[data-uisize="verybig"]  { --ui-base: 18px; }
+
 
       * {
         margin: 0;
@@ -55,7 +110,7 @@
         display: flex;
         height: 100vh;
         overflow: hidden;
-        font-size: 14px;
+        font-size: var(--ui-base);
       }
 
       /* ─── SIDEBAR ─── */
@@ -87,6 +142,8 @@
         font-size: 20px;
         color: white;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        overflow: hidden;
+        flex-shrink: 0;
       }
       .logo-text {
         font-weight: 800;
@@ -1148,6 +1205,7 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 34px; margin: 0 auto 14px;
         box-shadow: 0 8px 24px rgba(239,68,68,0.4);
+        overflow: hidden;
       }
       .login-logo h1 {
         color: #fff;
@@ -1312,9 +1370,9 @@
     <div id="loginScreen">
       <div class="login-box">
         <div class="login-logo">
-          <div class="login-logo-icon">⛽</div>
-          <h1>محطة النيل</h1>
-          <p>نظام الإدارة الذكي — تسجيل الدخول</p>
+          <div class="login-logo-icon" id="loginLogoIcon">⛽</div>
+          <h1 id="loginStationName">محطة النيل</h1>
+          <p id="loginStationSub">نظام الإدارة الذكي — تسجيل الدخول</p>
         </div>
         <div class="login-field">
           <label>اسم المستخدم</label>
@@ -1372,10 +1430,10 @@
     <!-- ═══ SIDEBAR ═══ -->
     <aside id="sidebar">
       <div class="sidebar-logo">
-        <div class="logo-icon">⛽</div>
+        <div class="logo-icon" id="sidebarLogoIcon">⛽</div>
         <div class="logo-text">
-          محطة النيل
-          <small>نظام الإدارة الذكي</small>
+          <span id="sidebarStationName">محطة النيل</span>
+          <small id="sidebarStationSub">نظام الإدارة الذكي</small>
         </div>
       </div>
 
@@ -3952,14 +4010,47 @@
               >
                 <div class="settings-section">
                   <h3>🏪 بيانات المحطة</h3>
+
+                  <!-- Logo upload -->
                   <div class="form-group">
-                    <label class="form-label">اسم المحطة</label
-                    ><input
-                      type="text"
-                      class="form-input"
-                      id="sStationName"
-                      placeholder="محطة النيل"
-                    />
+                    <label class="form-label">شعار المحطة (Logo)</label>
+                    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                      <div id="sLogoPreview"
+                        style="width:78px;height:78px;border-radius:14px;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;background:var(--surface2);font-size:32px;color:var(--text3);overflow:hidden;flex-shrink:0;">
+                        ⛽
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:160px;">
+                        <button class="btn btn-secondary" type="button" onclick="document.getElementById('sLogoFile').click()">
+                          📷 اختر صورة الشعار
+                        </button>
+                        <button class="btn btn-secondary" type="button" id="sLogoRemoveBtn" onclick="settingsRemoveLogo()" style="display:none;">
+                          🗑️ إزالة الشعار
+                        </button>
+                        <div style="font-size:11px;color:var(--text3);">PNG / JPG — يفضّل أن يكون مربعاً، أقل من 500KB.</div>
+                      </div>
+                      <input type="file" id="sLogoFile" accept="image/*" style="display:none;" onchange="settingsHandleLogoUpload(this)" />
+                    </div>
+                  </div>
+
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label class="form-label">اسم المحطة</label
+                      ><input
+                        type="text"
+                        class="form-input"
+                        id="sStationName"
+                        placeholder="محطة النيل"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">كود المحطة</label
+                      ><input
+                        type="text"
+                        class="form-input"
+                        id="sStationCode"
+                        placeholder="ST-001"
+                      />
+                    </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label">العنوان</label
@@ -3992,6 +4083,64 @@
                   <button class="btn btn-primary" onclick="saveSettings()">
                     💾 حفظ الإعدادات
                   </button>
+                </div>
+              </div>
+
+              <!-- ═══ Appearance / المظهر ═══ -->
+              <div class="card" style="padding: 18px; margin-bottom: 16px">
+                <div class="settings-section">
+                  <h3>🎨 المظهر والعرض</h3>
+
+                  <!-- Theme switcher -->
+                  <div class="form-group">
+                    <label class="form-label">الوضع (Theme)</label>
+                    <div id="sThemeChoices" style="display:flex;gap:10px;flex-wrap:wrap;">
+                      <div data-theme-choice="light"
+                        onclick="settingsSetTheme('light')"
+                        style="cursor:pointer;flex:1;min-width:130px;padding:14px 12px;border-radius:12px;border:2px solid var(--border);text-align:center;background:#ffffff;color:#0f172a;transition:all 0.15s;">
+                        <div style="font-size:22px;margin-bottom:4px;">☀️</div>
+                        <div style="font-weight:700;font-size:13px;">فاتح (Light)</div>
+                      </div>
+                      <div data-theme-choice="dark"
+                        onclick="settingsSetTheme('dark')"
+                        style="cursor:pointer;flex:1;min-width:130px;padding:14px 12px;border-radius:12px;border:2px solid var(--border);text-align:center;background:#0b1220;color:#e2e8f0;transition:all 0.15s;">
+                        <div style="font-size:22px;margin-bottom:4px;">🌙</div>
+                        <div style="font-weight:700;font-size:13px;">داكن (Dark)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Font size scale -->
+                  <div class="form-group" style="margin-top:14px;">
+                    <label class="form-label">حجم الخط (UI Font Size)</label>
+                    <div id="sUiSizeChoices" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                      <div data-uisize-choice="small"
+                        onclick="settingsSetUiSize('small')"
+                        style="cursor:pointer;padding:11px 8px;border-radius:10px;border:2px solid var(--border);text-align:center;background:var(--surface2);transition:all 0.15s;">
+                        <div style="font-size:11px;font-weight:800;">صغير</div>
+                        <div style="font-size:10px;color:var(--text3);">Small</div>
+                      </div>
+                      <div data-uisize-choice="mid"
+                        onclick="settingsSetUiSize('mid')"
+                        style="cursor:pointer;padding:11px 8px;border-radius:10px;border:2px solid var(--border);text-align:center;background:var(--surface2);transition:all 0.15s;">
+                        <div style="font-size:13px;font-weight:800;">متوسط</div>
+                        <div style="font-size:10px;color:var(--text3);">Mid</div>
+                      </div>
+                      <div data-uisize-choice="big"
+                        onclick="settingsSetUiSize('big')"
+                        style="cursor:pointer;padding:11px 8px;border-radius:10px;border:2px solid var(--border);text-align:center;background:var(--surface2);transition:all 0.15s;">
+                        <div style="font-size:15px;font-weight:800;">كبير</div>
+                        <div style="font-size:10px;color:var(--text3);">Big</div>
+                      </div>
+                      <div data-uisize-choice="verybig"
+                        onclick="settingsSetUiSize('verybig')"
+                        style="cursor:pointer;padding:11px 8px;border-radius:10px;border:2px solid var(--border);text-align:center;background:var(--surface2);transition:all 0.15s;">
+                        <div style="font-size:17px;font-weight:800;">كبير جدا</div>
+                        <div style="font-size:10px;color:var(--text3);">Very Big</div>
+                      </div>
+                    </div>
+                    <div style="font-size:11px;color:var(--text3);margin-top:8px;">يطبّق على واجهة النظام بالكامل ويُحفظ تلقائياً.</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -9253,32 +9402,14 @@
       function showShiftDetail(id) {
         const e = (DB.shiftEntries||[]).find(x => x.id === id);
         if (!e) return;
-        const pump = DB.pumps.find(p => p.id === e.pumpId);
 
-        // Nozzle readings table
-        let nozzleRows = '';
-        if (pump && pump.nozzles && pump.nozzles.length) {
-          pump.nozzles.forEach(nz => {
-            const fuel = DB.fuels.find(f => f.id == nz.fuelId);
-            const startVal = e.nozzleStart?.[nz.id] ?? 0;
-            const endVal = e.nozzleEnd?.[nz.id] ?? 0;
-            const adj = e.nozzleAdj?.[nz.id] ?? 0;
-            const net = endVal - startVal - adj;
-            const price = fuel ? fuel.sell : 0;
-            const val = net * price;
-            nozzleRows += `<tr>
-              <td style="font-weight:600">${nz.label}</td>
-              <td style="font-size:12px;color:var(--text3)">${fuel ? fuel.name : '—'}</td>
-              <td style="font-family:var(--mono)">${startVal.toLocaleString()}</td>
-              <td style="font-family:var(--mono)">${endVal.toLocaleString()}</td>
-              <td style="font-family:var(--mono);color:var(--red)">${adj.toLocaleString()}</td>
-              <td style="font-family:var(--mono);color:var(--green);font-weight:700">${net.toFixed(3)} ل</td>
-              <td style="font-family:var(--mono);color:var(--accent2);font-weight:800">${fN(val)} ج</td>
-            </tr>`;
-          });
-        } else {
-          nozzleRows = '<tr><td colspan="7" style="text-align:center;color:var(--text3);">لا توجد مسدسات</td></tr>';
-        }
+        // Use the comprehensive helper to render the full detail
+        const detailHtml = buildShiftEntryDetailHTML(e);
+
+        // Determine if this is the truly latest closed shift entry across ALL groups
+        const allGroups = buildShiftGroups();
+        const groupOfThis = allGroups.find(g => g.entries.some(x => x.id === id));
+        const isLatestGroup = allGroups.length && groupOfThis && allGroups[0].gKey === groupOfThis.gKey;
 
         const html = `
           <div style="padding:0;">
@@ -9302,68 +9433,13 @@
               </div>
             </div>
 
-            <!-- Nozzle readings -->
-            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--accent2);">📊 قراءات المسدسات</div>
-            <div style="overflow-x:auto;margin-bottom:16px;">
-              <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                <thead>
-                  <tr style="background:var(--surface2);">
-                    <th style="padding:8px;border:1px solid var(--border);text-align:right;">المسدس</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:right;">الوقود</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:center;">قراءة البداية</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:center;">قراءة النهاية</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:center;">العيار</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:center;">صافي اللترات</th>
-                    <th style="padding:8px;border:1px solid var(--border);text-align:center;">القيمة (ج)</th>
-                  </tr>
-                </thead>
-                <tbody>${nozzleRows}</tbody>
-              </table>
-            </div>
+            ${isLatestGroup ? `<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+              <button class="btn btn-sm btn-amber" onclick="closeShiftDetailModal();openEditLastShift(${JSON.stringify(id)})">✏️ تعديل هذه الوردية</button>
+            </div>` : ''}
 
-            <!-- Financial summary -->
-            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--accent2);">💰 ملخص مالي</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-              <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">إجمالي القراءات</div>
-                <div style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:18px;">${fN(e.totalGuns||0)} ج</div>
-              </div>
-              <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">الكاش المحصل</div>
-                <div style="font-family:var(--mono);font-weight:800;color:var(--amber);font-size:18px;">${fN(e.actualCash||0)} ج</div>
-              </div>
-              <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">الشركات</div>
-                <div style="font-family:var(--mono);font-weight:800;color:var(--purple);font-size:18px;">${fN(e.compTotal||0)} ج</div>
-              </div>
-              <div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">فيزا</div>
-                <div style="font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:16px;">${fN(e.visa||0)} ج</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">فودافون كاش</div>
-                <div style="font-family:var(--mono);font-weight:700;font-size:16px;">${fN(e.vodafone||0)} ج</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">توم كارد</div>
-                <div style="font-family:var(--mono);font-weight:700;font-size:16px;">${fN(e.tomcard||0)} ج</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">انستا باي</div>
-                <div style="font-family:var(--mono);font-weight:700;font-size:16px;">${fN(e.stapay||0)} ج</div>
-              </div>
-              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">توريد</div>
-                <div style="font-family:var(--mono);font-weight:700;font-size:16px;">${fN(e.supply||0)} ج</div>
-              </div>
-              <div style="background:${(e.diff||0)<0?'var(--red-dim)':'var(--green-dim)'};border:1px solid ${(e.diff||0)<0?'rgba(239,68,68,.3)':'rgba(16,185,129,.3)'};border-radius:10px;padding:12px;text-align:center;">
-                <div style="font-size:10px;color:var(--text3);">فرق الكاش</div>
-                <div style="font-family:var(--mono);font-weight:800;color:${(e.diff||0)<0?'var(--red)':'var(--green)'};font-size:16px;">${fN(e.diff||0)} ج</div>
-              </div>
-            </div>
+            ${detailHtml}
           </div>`;
 
-        // Show in a modal-like panel
         const modal = document.getElementById('shiftDetailModal');
         if (modal) {
           document.getElementById('shiftDetailContent').innerHTML = html;
@@ -9497,12 +9573,25 @@
         e.tomcard = parseFloat(document.getElementById('editTomCard').value)||0;
         e.stapay = parseFloat(document.getElementById('editStaPay').value)||0;
         const totalDed = (e.visa||0)+(e.vodafone||0)+(e.tomcard||0)+(e.stapay||0)+(e.supply||0)+(e.compTotal||0);
+        e.totalDeductions = totalDed;
         e.logicalCash = totalGuns - totalDed;
         e.diff = e.actualCash - e.logicalCash;
 
         saveDB();
         closeEditShiftModal();
-        generateReport();
+        // Refresh whichever view is currently visible
+        try { if (typeof generateReport === 'function') generateReport(); } catch(_) {}
+        try {
+          const srPage = document.getElementById('page-shift-report');
+          if (srPage && srPage.classList.contains('active')) {
+            renderShiftReport();
+            // Re-open detail panel for the same group if it was open
+            if (srSelectedId) {
+              const allG = buildShiftGroups();
+              srRenderGroupDetail(srSelectedId, allG);
+            }
+          }
+        } catch(_) {}
         toast('✅ تم حفظ تعديلات الوردية', 'success');
       }
 
@@ -9622,14 +9711,21 @@
           return;
         }
 
+        // Identify the latest closed group (for "edit last shift" button)
+        // We find from ALL groups (not filtered) so the edit button always points to the truly latest one.
+        const latestGroupGKey = (allGroups && allGroups.length) ? allGroups[0].gKey : null;
+
         tbody.innerHTML = groups.map((g, idx) => {
           const isSelected = g.gKey === srSelectedId;
+          const isLatest = g.gKey === latestGroupGKey;
           const diffColor = g.totalDiff < 0 ? 'var(--red)' : g.totalDiff > 0 ? 'var(--green)' : 'var(--text3)';
           const pumpNames = [...new Set(g.entries.map(e => e.pumpName))].join('، ');
           const shiftLabel = g.groupNum ? `وردية ${g.groupNum}` : `وردية`;
+          // Pick first entry id of the group as the "edit target" (per-pump edit dialog)
+          const editTargetId = g.entries[0] ? g.entries[0].id : null;
           return `<tr id="srRow_${g.gKey}" style="cursor:pointer;background:${isSelected?'var(--accent-dim)':'transparent'};transition:background 0.15s;"
               onclick="srSelectGroup('${g.gKey}')">
-            <td style="color:var(--text3);font-size:12px;font-weight:700;">${shiftLabel}</td>
+            <td style="color:var(--text3);font-size:12px;font-weight:700;">${shiftLabel}${isLatest ? ' <span style="background:var(--amber-dim);color:var(--amber);font-size:9px;padding:2px 6px;border-radius:6px;font-weight:700;">الأخيرة</span>' : ''}</td>
             <td style="font-size:12px;color:var(--text3);">${fDate((g.latestEnd||'').slice(0,10))}</td>
             <td><strong style="font-size:12px;">${pumpNames}</strong></td>
             <td style="font-size:11px;color:var(--text3);">${fDateTime(g.earliestStart)}</td>
@@ -9638,11 +9734,42 @@
             <td style="font-family:var(--mono);color:var(--amber);">${fN(g.totalCash)} ج</td>
             <td style="font-family:var(--mono);color:var(--purple);">${fN(g.totalComp)} ج</td>
             <td style="font-family:var(--mono);font-weight:700;color:${diffColor};">${g.totalDiff >= 0 ? '+' : ''}${fN(g.totalDiff)} ج</td>
-            <td>
+            <td style="white-space:nowrap;">
               <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();srSelectGroup('${g.gKey}')">🔍 تفاصيل</button>
+              ${isLatest ? `<button class="btn btn-sm btn-amber" style="margin-right:4px;" onclick="event.stopPropagation();srEditLatestGroup('${g.gKey}')">✏️ تعديل</button>` : ''}
             </td>
           </tr>`;
         }).join('');
+      }
+
+      // ── تعديل آخر وردية (مجموعة) — يفتح modal لكل طلمبة ──
+      function srEditLatestGroup(gKey) {
+        const allGroups = buildShiftGroups();
+        const g = allGroups.find(x => x.gKey === gKey);
+        if (!g || !g.entries.length) return toast('الوردية غير موجودة', 'warn');
+
+        // إذا فيه أكثر من entry (أكثر من طلمبة) — اعرض قائمة لاختيار الطلمبة
+        if (g.entries.length === 1) {
+          openEditLastShift(g.entries[0].id);
+          return;
+        }
+        // Multi-pump group → show a chooser
+        const choices = g.entries.map(e =>
+          `<button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:8px;text-align:right;"
+             onclick="closeEditShiftModal();openEditLastShift(${JSON.stringify(e.id)})">
+             ⛽ ${e.pumpName} — 👤 ${e.workerName}
+           </button>`).join('');
+        document.getElementById('editShiftContent').innerHTML = `
+          <div style="padding:8px;">
+            <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--amber);">
+              ✏️ هذه الوردية تحتوي ${g.entries.length} طلمبة — اختر الطلمبة المراد تعديلها:
+            </div>
+            ${choices}
+            <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+              <button class="btn btn-secondary" onclick="closeEditShiftModal()">إلغاء</button>
+            </div>
+          </div>`;
+        document.getElementById('editShiftModal').style.display = 'flex';
       }
 
       // ── Select a group: highlight row + show detail panel ──
@@ -9676,107 +9803,343 @@
 
         const shiftLabel = g.groupNum ? `وردية ${g.groupNum}` : 'وردية';
 
-        // Build per-pump detail blocks
-        const pumpsHtml = g.entries.map(e => {
-          const pump = DB.pumps.find(p => p.id === e.pumpId);
-          let nozzleRows = '';
-          if (pump && pump.nozzles && pump.nozzles.length) {
-            pump.nozzles.forEach(nz => {
-              const fuel = DB.fuels.find(f => f.id == nz.fuelId);
-              const startVal = e.nozzleStart?.[nz.id] ?? 0;
-              const endVal   = e.nozzleEnd?.[nz.id]   ?? 0;
-              const adjVal   = e.nozzleAdj?.[nz.id]   ?? 0;
-              const net  = endVal - startVal - adjVal;
-              const price = fuel ? fuel.sell : 0;
-              const val   = net * price;
-              nozzleRows += `<tr>
-                <td style="font-weight:600;padding:8px 10px;border:1px solid var(--border);">${nz.label}</td>
-                <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--text3);">${fuel ? fuel.name : '—'}</td>
-                <td style="padding:8px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${(+startVal).toLocaleString()}</td>
-                <td style="padding:8px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;background:var(--amber-dim);font-weight:700;">${(+endVal).toLocaleString()}</td>
-                <td style="padding:8px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--green);font-weight:700;">${net.toFixed(3)} ل</td>
-                <td style="padding:8px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--accent2);font-weight:800;">${fN(val)} ج</td>
-              </tr>`;
-            });
-          } else {
-            nozzleRows = '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:12px;">لا توجد مسدسات</td></tr>';
-          }
-          const diff = e.diff || 0;
-          const diffColor = diff < 0 ? 'var(--red)' : diff > 0 ? 'var(--green)' : 'var(--text3)';
-          return `
-            <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
-              <div style="background:var(--surface2);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <span style="font-size:16px;font-weight:800;color:var(--accent2);">⛽ ${e.pumpName}</span>
-                <span style="font-size:13px;color:var(--text2);">👤 ${e.workerName}</span>
-                <span style="font-size:12px;color:var(--text3);">${fDateTime(e.startTime)} ← ${fDateTime(e.endTime)}</span>
-              </div>
-              <div style="padding:14px;">
-                <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
-                  <thead><tr style="background:var(--surface2);">
-                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">المسدس</th>
-                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">الوقود</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">بداية</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">نهاية</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">صافي (ل)</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--accent2);border:1px solid var(--border);">القيمة (ج)</th>
-                  </tr></thead>
-                  <tbody>${nozzleRows}</tbody>
-                </table>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-                  <div style="background:var(--green-dim);border-radius:8px;padding:10px;text-align:center;">
-                    <div style="font-size:10px;color:var(--text3);">إجمالي القراءات</div>
-                    <div style="font-family:var(--mono);font-weight:800;color:var(--green);">${fN(e.totalGuns||0)} ج</div>
-                  </div>
-                  <div style="background:var(--amber-dim);border-radius:8px;padding:10px;text-align:center;">
-                    <div style="font-size:10px;color:var(--text3);">الكاش المحصل</div>
-                    <div style="font-family:var(--mono);font-weight:800;color:var(--amber);">${fN(e.actualCash||0)} ج</div>
-                  </div>
-                  <div style="background:var(--purple-dim);border-radius:8px;padding:10px;text-align:center;">
-                    <div style="font-size:10px;color:var(--text3);">الشركات</div>
-                    <div style="font-family:var(--mono);font-weight:800;color:var(--purple);">${fN(e.compTotal||0)} ج</div>
-                  </div>
-                  <div style="background:${diff<0?'var(--red-dim)':diff>0?'var(--green-dim)':'var(--surface2)'};border-radius:8px;padding:10px;text-align:center;">
-                    <div style="font-size:10px;color:var(--text3);">فرق الكاش</div>
-                    <div style="font-family:var(--mono);font-weight:800;color:${diffColor};">${diff>=0?'+':''}${fN(diff)} ج</div>
-                  </div>
-                </div>
-              </div>
-            </div>`;
-        }).join('');
+        // ── Aggregate group-level totals across all entries ──
+        const gTotals = g.entries.reduce((acc, e) => {
+          acc.guns      += +(e.totalGuns||0);
+          acc.cash      += +(e.actualCash||0);
+          acc.logical   += +(e.logicalCash||0);
+          acc.deduct    += +(e.totalDeductions||0);
+          acc.visa      += +(e.visa||0);
+          acc.vodafone  += +(e.vodafone||0);
+          acc.tomcard   += +(e.tomcard||0);
+          acc.stapay    += +(e.stapay||0);
+          acc.supply    += +(e.supply||0);
+          acc.comp      += +(e.compTotal||0);
+          acc.diff      += +(e.diff||0);
+          return acc;
+        }, {guns:0,cash:0,logical:0,deduct:0,visa:0,vodafone:0,tomcard:0,stapay:0,supply:0,comp:0,diff:0});
+
+        // ── Build per-pump detail blocks (full info) ──
+        const pumpsHtml = g.entries.map(e => buildShiftEntryDetailHTML(e)).join('');
 
         const totalDiff = g.totalDiff;
         const diffColor = totalDiff < 0 ? 'var(--red)' : totalDiff > 0 ? 'var(--green)' : 'var(--text3)';
 
+        // Edit button: only show for the truly latest closed group
+        const allGroupsX = buildShiftGroups();
+        const isLatestGroup = allGroupsX.length && allGroupsX[0].gKey === gKey;
+
         panel.style.display = 'block';
         panel.innerHTML = `
           <div class="card" style="border:2px solid var(--accent);border-radius:16px;">
-            <div class="card-header" style="background:var(--accent-dim);">
-              📋 تفاصيل ${shiftLabel} — ${fDate((g.latestEnd||'').slice(0,10))}
+            <div class="card-header" style="background:var(--accent-dim);flex-wrap:wrap;gap:8px;">
+              <span>📋 تفاصيل ${shiftLabel} — ${fDate((g.latestEnd||'').slice(0,10))}</span>
               <div class="spacer"></div>
+              ${isLatestGroup ? `<button class="btn btn-sm btn-amber" onclick="srEditLatestGroup('${gKey}')">✏️ تعديل الوردية</button>` : ''}
               <button class="btn btn-sm btn-secondary" onclick="srCloseDetail()">✕ إغلاق</button>
             </div>
             <div class="card-body">
-              <!-- Summary totals -->
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;">
-                <div style="background:var(--green-dim);border-radius:10px;padding:14px;text-align:center;">
+
+              <!-- Group summary totals -->
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent2);">📊 ملخص إجمالي الوردية</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+                <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:12px;text-align:center;">
                   <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">إجمالي القراءات</div>
-                  <div style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:18px;">${fN(g.totalGuns)} ج</div>
+                  <div style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:17px;">${fN(gTotals.guns)} ج</div>
                 </div>
-                <div style="background:var(--amber-dim);border-radius:10px;padding:14px;text-align:center;">
+                <div style="background:var(--red-dim);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">إجمالي الخصومات</div>
+                  <div style="font-family:var(--mono);font-weight:900;color:var(--red);font-size:17px;">${fN(gTotals.deduct)} ج</div>
+                </div>
+                <div style="background:var(--accent-dim);border:2px solid var(--accent);border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">الكاش المنطقي</div>
+                  <div style="font-family:var(--mono);font-weight:900;color:var(--accent2);font-size:17px;">${fN(gTotals.logical)} ج</div>
+                </div>
+                <div style="background:var(--amber-dim);border:2px solid var(--amber);border-radius:10px;padding:12px;text-align:center;">
                   <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">الكاش المحصل</div>
-                  <div style="font-family:var(--mono);font-weight:900;color:var(--amber);font-size:18px;">${fN(g.totalCash)} ج</div>
-                </div>
-                <div style="background:var(--purple-dim);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">الشركات</div>
-                  <div style="font-family:var(--mono);font-weight:900;color:var(--purple);font-size:18px;">${fN(g.totalComp)} ج</div>
-                </div>
-                <div style="background:${totalDiff<0?'var(--red-dim)':totalDiff>0?'var(--green-dim)':'var(--surface2)'};border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">إجمالي الفرق</div>
-                  <div style="font-family:var(--mono);font-weight:900;color:${diffColor};font-size:18px;">${totalDiff>=0?'+':''}${fN(totalDiff)} ج</div>
+                  <div style="font-family:var(--mono);font-weight:900;color:var(--amber);font-size:17px;">${fN(gTotals.cash)} ج</div>
                 </div>
               </div>
+
+              <!-- Aggregated payment methods row -->
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">💳 فيزا</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;">${fN(gTotals.visa)} ج</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">📱 فودافون</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;">${fN(gTotals.vodafone)} ج</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">🃏 توم كارد</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;">${fN(gTotals.tomcard)} ج</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">📲 انستا باي</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;">${fN(gTotals.stapay)} ج</div>
+                </div>
+                <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">🏢 الشركات</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--purple);font-size:13px;">${fN(gTotals.comp)} ج</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">🏭 توريد</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:13px;">${fN(gTotals.supply)} ج</div>
+                </div>
+                <div style="background:${totalDiff<0?'var(--red-dim)':totalDiff>0?'var(--green-dim)':'var(--surface2)'};border:2px solid ${totalDiff<0?'rgba(239,68,68,.4)':totalDiff>0?'rgba(16,185,129,.4)':'var(--border)'};border-radius:9px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">فرق الكاش</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:${diffColor};font-size:13px;">${totalDiff>=0?'+':''}${fN(totalDiff)} ج</div>
+                </div>
+              </div>
+
               <!-- Per-pump details -->
               ${pumpsHtml}
+            </div>
+          </div>`;
+      }
+
+      // ── Reusable: Build a complete shift-entry detail block (used by group detail and modal) ──
+      function buildShiftEntryDetailHTML(e) {
+        const pump = DB.pumps.find(p => p.id === e.pumpId);
+
+        // ── Nozzle readings table (with calibration column) ──
+        let nozzleRows = '';
+        let totalLiters = 0;
+        if (pump && pump.nozzles && pump.nozzles.length) {
+          pump.nozzles.forEach(nz => {
+            const fuel = DB.fuels.find(f => f.id == nz.fuelId);
+            const startVal = e.nozzleStart?.[nz.id] ?? 0;
+            const endVal   = e.nozzleEnd?.[nz.id]   ?? 0;
+            const adjVal   = e.nozzleAdj?.[nz.id]   ?? 0;
+            const net  = endVal - startVal - adjVal;
+            const price = (e.fuelPriceSnapshot && e.fuelPriceSnapshot[nz.fuelId])
+              ? e.fuelPriceSnapshot[nz.fuelId].sell
+              : (fuel ? fuel.sell : 0);
+            const val   = net * price;
+            totalLiters += net;
+            nozzleRows += `<tr>
+              <td style="font-weight:600;padding:7px 10px;border:1px solid var(--border);">${nz.label}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-size:12px;color:var(--text3);">${fuel ? fuel.name : '—'}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${(+startVal).toLocaleString()}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;background:var(--amber-dim);font-weight:700;">${(+endVal).toLocaleString()}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:${adjVal>0?'var(--red)':'var(--text3)'};">${(+adjVal).toLocaleString()}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--green);font-weight:700;">${net.toFixed(3)} ل</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--accent2);font-weight:800;">${fN(val)} ج</td>
+            </tr>`;
+          });
+        } else {
+          nozzleRows = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:12px;">لا توجد مسدسات</td></tr>';
+        }
+
+        // ── Products custody (productCart) ──
+        const productCart = e.productCart || [];
+        const productSales = e.productSales || [];
+        const carriedOver = e.carriedOverItems || [];
+
+        let custodyRows = '';
+        if (productCart.length) {
+          productCart
+            .filter(c => c.productId && !isNaN(parseInt(c.productId)))
+            .forEach(c => {
+              const pid = parseInt(c.productId);
+              const product = DB.products.find(x => x.id == pid);
+              const productName = product ? product.name :
+                (e.productPriceSnapshot && e.productPriceSnapshot[pid] ? e.productPriceSnapshot[pid].name : `منتج #${pid}`);
+              const soldQty = productSales
+                .filter(s => s.productId == pid)
+                .reduce((sum, s) => sum + (+(s.qty)||1), 0);
+              const remain = Math.max(0, (+(c.qty)||1) - soldQty);
+              const sellPrice = product ? product.sell :
+                (e.productPriceSnapshot && e.productPriceSnapshot[pid] ? e.productPriceSnapshot[pid].sell : 0);
+              const isCarried = c.carriedFrom ? '<span style="background:var(--amber-dim);color:var(--amber);font-size:9px;padding:2px 5px;border-radius:5px;margin-right:4px;">مرحّل</span>' : '';
+              custodyRows += `<tr>
+                <td style="padding:7px 10px;border:1px solid var(--border);font-weight:600;">${productName}${isCarried}</td>
+                <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${(+(c.qty)||1).toLocaleString()}</td>
+                <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--green);font-weight:700;">${soldQty.toLocaleString()}</td>
+                <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:${remain>0?'var(--amber)':'var(--text3)'};font-weight:700;">${remain.toLocaleString()}</td>
+                <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${fN(sellPrice)} ج</td>
+              </tr>`;
+            });
+        }
+
+        // ── Products sold (aggregated by product) ──
+        const salesAgg = {};
+        productSales.forEach(s => {
+          const pid = parseInt(s.productId);
+          if (!salesAgg[pid]) {
+            const product = DB.products.find(x => x.id == pid);
+            const productName = product ? product.name :
+              (e.productPriceSnapshot && e.productPriceSnapshot[pid] ? e.productPriceSnapshot[pid].name : `منتج #${pid}`);
+            const sellPrice = product ? product.sell :
+              (e.productPriceSnapshot && e.productPriceSnapshot[pid] ? e.productPriceSnapshot[pid].sell : 0);
+            salesAgg[pid] = { name: productName, qty: 0, sellPrice, total: 0 };
+          }
+          const q = +(s.qty)||1;
+          const p = +(s.price)||salesAgg[pid].sellPrice;
+          salesAgg[pid].qty += q;
+          salesAgg[pid].total += q * p;
+        });
+        let salesRows = '';
+        let totalSalesValue = 0;
+        Object.values(salesAgg).forEach(s => {
+          totalSalesValue += s.total;
+          salesRows += `<tr>
+            <td style="padding:7px 10px;border:1px solid var(--border);font-weight:600;">${s.name}</td>
+            <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${s.qty.toLocaleString()}</td>
+            <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;">${fN(s.sellPrice)} ج</td>
+            <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--green);font-weight:700;">${fN(s.total)} ج</td>
+          </tr>`;
+        });
+
+        // ── Carried over to next shift ──
+        let carriedRows = '';
+        if (carriedOver.length) {
+          carriedOver.forEach(c => {
+            const pid = parseInt(c.productId);
+            const product = DB.products.find(x => x.id == pid);
+            const productName = product ? product.name :
+              (e.productPriceSnapshot && e.productPriceSnapshot[pid] ? e.productPriceSnapshot[pid].name : `منتج #${pid}`);
+            carriedRows += `<tr>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-weight:600;">${productName}</td>
+              <td style="padding:7px 10px;border:1px solid var(--border);font-family:var(--mono);text-align:center;color:var(--amber);font-weight:700;">${(+(c.qty)||0).toLocaleString()}</td>
+            </tr>`;
+          });
+        }
+
+        const diff = e.diff || 0;
+        const diffColor = diff < 0 ? 'var(--red)' : diff > 0 ? 'var(--green)' : 'var(--text3)';
+
+        return `
+          <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+            <div style="background:var(--surface2);padding:11px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-size:15px;font-weight:800;color:var(--accent2);">⛽ ${e.pumpName}</span>
+              <span style="font-size:13px;color:var(--text2);">👤 ${e.workerName}</span>
+              <span style="font-size:11px;color:var(--text3);">${fDateTime(e.startTime)} ← ${fDateTime(e.endTime)}</span>
+            </div>
+            <div style="padding:14px;">
+
+              <!-- Nozzle readings -->
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--accent2);">📊 قراءات المسدسات والعيارات</div>
+              <div style="overflow-x:auto;margin-bottom:14px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead><tr style="background:var(--surface2);">
+                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">المسدس</th>
+                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">الوقود</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">قراءة البداية</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">قراءة النهاية</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">العيار</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">صافي (ل)</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--accent2);border:1px solid var(--border);">القيمة (ج)</th>
+                  </tr></thead>
+                  <tbody>${nozzleRows}</tbody>
+                  <tfoot><tr style="background:var(--green-dim);">
+                    <td colspan="5" style="padding:8px 10px;font-weight:700;border:1px solid var(--border);">الإجمالي</td>
+                    <td style="padding:8px 10px;text-align:center;font-family:var(--mono);font-weight:800;color:var(--green);border:1px solid var(--border);">${totalLiters.toFixed(3)} ل</td>
+                    <td style="padding:8px 10px;text-align:center;font-family:var(--mono);font-weight:800;color:var(--accent2);border:1px solid var(--border);">${fN(e.totalGuns||0)} ج</td>
+                  </tr></tfoot>
+                </table>
+              </div>
+
+              ${productCart.length ? `
+              <!-- Products custody -->
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--accent2);">📦 عهدة المنتجات</div>
+              <div style="overflow-x:auto;margin-bottom:14px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead><tr style="background:var(--surface2);">
+                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">المنتج</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">الكمية المستلمة</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">المباع</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">المتبقي</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">سعر البيع</th>
+                  </tr></thead>
+                  <tbody>${custodyRows || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:10px;">لا توجد منتجات في العهدة</td></tr>'}</tbody>
+                </table>
+              </div>` : ''}
+
+              ${salesRows ? `
+              <!-- Products sold -->
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--green);">🛒 المنتجات المباعة</div>
+              <div style="overflow-x:auto;margin-bottom:14px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead><tr style="background:var(--surface2);">
+                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">المنتج</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">الكمية</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">السعر</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--green);border:1px solid var(--border);">الإجمالي</th>
+                  </tr></thead>
+                  <tbody>${salesRows}</tbody>
+                  <tfoot><tr style="background:var(--green-dim);">
+                    <td colspan="3" style="padding:8px 10px;font-weight:700;border:1px solid var(--border);">إجمالي مبيعات المنتجات</td>
+                    <td style="padding:8px 10px;text-align:center;font-family:var(--mono);font-weight:800;color:var(--green);border:1px solid var(--border);">${fN(totalSalesValue)} ج</td>
+                  </tr></tfoot>
+                </table>
+              </div>` : ''}
+
+              ${carriedRows ? `
+              <!-- Carried over to next shift -->
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--amber);">🔁 المرحّل للوردية التالية</div>
+              <div style="overflow-x:auto;margin-bottom:14px;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead><tr style="background:var(--surface2);">
+                    <th style="padding:7px 10px;text-align:right;font-size:11px;color:var(--text3);border:1px solid var(--border);">المنتج</th>
+                    <th style="padding:7px 10px;text-align:center;font-size:11px;color:var(--text3);border:1px solid var(--border);">الكمية المتبقية</th>
+                  </tr></thead>
+                  <tbody>${carriedRows}</tbody>
+                </table>
+              </div>` : ''}
+
+              <!-- Financial summary for this entry -->
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--accent2);">💰 الملخص المالي</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;">
+                <div style="background:var(--green-dim);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">إجمالي القراءات</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px;">${fN(e.totalGuns||0)} ج</div>
+                </div>
+                <div style="background:var(--red-dim);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">إجمالي الخصومات</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--red);font-size:14px;">${fN(e.totalDeductions||0)} ج</div>
+                </div>
+                <div style="background:var(--accent-dim);border:2px solid var(--accent);border-radius:8px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">الكاش المنطقي</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--accent2);font-size:14px;">${fN(e.logicalCash||0)} ج</div>
+                </div>
+                <div style="background:var(--amber-dim);border:2px solid var(--amber);border-radius:8px;padding:9px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text3);">الكاش المحصل</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--amber);font-size:14px;">${fN(e.actualCash||0)} ج</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">💳 فيزا</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:12px;">${fN(e.visa||0)}</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">📱 فودافون</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:12px;">${fN(e.vodafone||0)}</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">🃏 توم كارد</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:12px;">${fN(e.tomcard||0)}</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">📲 انستا باي</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:12px;">${fN(e.stapay||0)}</div>
+                </div>
+                <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">🏢 شركات</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--purple);font-size:12px;">${fN(e.compTotal||0)}</div>
+                </div>
+                <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">🏭 توريد</div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:12px;">${fN(e.supply||0)}</div>
+                </div>
+                <div style="background:${diff<0?'var(--red-dim)':diff>0?'var(--green-dim)':'var(--surface2)'};border:2px solid ${diff<0?'rgba(239,68,68,.4)':diff>0?'rgba(16,185,129,.4)':'var(--border)'};border-radius:8px;padding:7px;text-align:center;">
+                  <div style="font-size:9px;color:var(--text3);">فرق الكاش</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:${diffColor};font-size:12px;">${diff>=0?'+':''}${fN(diff)}</div>
+                </div>
+              </div>
+
             </div>
           </div>`;
       }
@@ -10326,23 +10689,185 @@
       function renderSettings() {
         const s = DB.settings || {};
         document.getElementById("sStationName").value = s.stationName || "";
+        const codeEl = document.getElementById("sStationCode");
+        if (codeEl) codeEl.value = s.stationCode || "";
         document.getElementById("sAddress").value = s.address || "";
         document.getElementById("sPhone").value = s.phone || "";
         document.getElementById("sCurrency").value = s.currency || "ج";
         document.getElementById("sTax").value = s.tax || "";
+
+        // Logo preview
+        settingsRenderLogoPreview();
+
+        // Sync the visual selection of theme/font choices to the saved values
+        settingsSyncAppearanceUI();
       }
 
       function saveSettings() {
+        const prev = DB.settings || {};
         DB.settings = {
           stationName: document.getElementById("sStationName").value,
+          stationCode: (document.getElementById("sStationCode") || {}).value || "",
           address: document.getElementById("sAddress").value,
           phone: document.getElementById("sPhone").value,
           currency: document.getElementById("sCurrency").value,
           tax: document.getElementById("sTax").value,
+          // Preserve appearance/logo (saved separately by their own handlers)
+          logo: prev.logo || null,
+          theme: prev.theme || 'light',
+          uiSize: prev.uiSize || 'mid',
         };
         saveDB();
+        applyBranding();
         toast("✅ تم حفظ الإعدادات", "success");
       }
+
+      // ═══════════════════════════════════════════════════
+      // APPEARANCE — Theme + Font Size + Logo
+      // ═══════════════════════════════════════════════════
+      function applyTheme(theme) {
+        const t = (theme === 'dark') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      function applyUiSize(size) {
+        const allowed = ['small','mid','big','verybig'];
+        const s = allowed.indexOf(size) >= 0 ? size : 'mid';
+        document.documentElement.setAttribute('data-uisize', s);
+      }
+
+      function settingsSetTheme(theme) {
+        if (!DB.settings) DB.settings = {};
+        DB.settings.theme = (theme === 'dark') ? 'dark' : 'light';
+        applyTheme(DB.settings.theme);
+        saveDB();
+        settingsSyncAppearanceUI();
+        toast(`✅ تم تفعيل الوضع ${DB.settings.theme === 'dark' ? 'الداكن' : 'الفاتح'}`, 'success');
+      }
+
+      function settingsSetUiSize(size) {
+        const allowed = ['small','mid','big','verybig'];
+        if (allowed.indexOf(size) < 0) return;
+        if (!DB.settings) DB.settings = {};
+        DB.settings.uiSize = size;
+        applyUiSize(size);
+        saveDB();
+        settingsSyncAppearanceUI();
+        const labels = { small:'صغير', mid:'متوسط', big:'كبير', verybig:'كبير جداً' };
+        toast(`✅ حجم الخط: ${labels[size]}`, 'success');
+      }
+
+      function settingsSyncAppearanceUI() {
+        const s = DB.settings || {};
+        const theme = s.theme === 'dark' ? 'dark' : 'light';
+        const uiSize = ['small','mid','big','verybig'].indexOf(s.uiSize) >= 0 ? s.uiSize : 'mid';
+
+        // Highlight active theme card
+        document.querySelectorAll('[data-theme-choice]').forEach(el => {
+          const isActive = el.getAttribute('data-theme-choice') === theme;
+          el.style.borderColor = isActive ? 'var(--accent)' : 'var(--border)';
+          el.style.boxShadow = isActive ? '0 0 0 3px var(--accent-glow)' : 'none';
+        });
+        // Highlight active font-size card
+        document.querySelectorAll('[data-uisize-choice]').forEach(el => {
+          const isActive = el.getAttribute('data-uisize-choice') === uiSize;
+          el.style.borderColor = isActive ? 'var(--accent)' : 'var(--border)';
+          el.style.background = isActive ? 'var(--accent-dim)' : 'var(--surface2)';
+          el.style.color = isActive ? 'var(--accent)' : 'var(--text)';
+        });
+      }
+
+      // ─── Logo upload ───
+      function settingsHandleLogoUpload(input) {
+        const f = input.files && input.files[0];
+        if (!f) return;
+        if (f.size > 800 * 1024) {
+          toast('⚠️ حجم الصورة كبير جدًا — حاول استخدام صورة أصغر', 'warn');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target.result;
+          if (!DB.settings) DB.settings = {};
+          DB.settings.logo = dataUrl;
+          saveDB();
+          settingsRenderLogoPreview();
+          applyBranding();
+          toast('✅ تم تحديث شعار المحطة', 'success');
+        };
+        reader.onerror = () => toast('❌ فشل قراءة الصورة', 'error');
+        reader.readAsDataURL(f);
+        // reset so re-selecting same file fires onchange
+        input.value = '';
+      }
+
+      function settingsRemoveLogo() {
+        if (!DB.settings) DB.settings = {};
+        DB.settings.logo = null;
+        saveDB();
+        settingsRenderLogoPreview();
+        applyBranding();
+        toast('🗑️ تم حذف الشعار', 'info');
+      }
+
+      function settingsRenderLogoPreview() {
+        const s = DB.settings || {};
+        const preview = document.getElementById('sLogoPreview');
+        const removeBtn = document.getElementById('sLogoRemoveBtn');
+        if (!preview) return;
+        if (s.logo) {
+          preview.innerHTML = `<img src="${s.logo}" alt="logo" style="width:100%;height:100%;object-fit:cover;" />`;
+          if (removeBtn) removeBtn.style.display = '';
+        } else {
+          preview.innerHTML = '⛽';
+          if (removeBtn) removeBtn.style.display = 'none';
+        }
+      }
+
+      // ─── Branding (logo + station name) applied to sidebar + login ───
+      function applyBranding() {
+        const s = DB.settings || {};
+        const name = s.stationName || 'محطة الوقود';
+        const code = s.stationCode || '';
+        const sub = code ? `كود: ${code}` : 'نظام الإدارة الذكي';
+
+        // Sidebar
+        const sbName = document.getElementById('sidebarStationName');
+        const sbSub = document.getElementById('sidebarStationSub');
+        const sbIcon = document.getElementById('sidebarLogoIcon');
+        if (sbName) sbName.textContent = name;
+        if (sbSub) sbSub.textContent = sub;
+        if (sbIcon) {
+          if (s.logo) {
+            sbIcon.innerHTML = `<img src="${s.logo}" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />`;
+            sbIcon.style.background = 'var(--surface2)';
+            sbIcon.style.padding = '0';
+          } else {
+            sbIcon.innerHTML = '⛽';
+            sbIcon.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+            sbIcon.style.padding = '';
+          }
+        }
+
+        // Login screen
+        const lgName = document.getElementById('loginStationName');
+        const lgSub = document.getElementById('loginStationSub');
+        const lgIcon = document.getElementById('loginLogoIcon');
+        if (lgName) lgName.textContent = name;
+        if (lgSub) lgSub.textContent = (code ? `كود: ${code} — ` : '') + 'تسجيل الدخول';
+        if (lgIcon) {
+          if (s.logo) {
+            lgIcon.innerHTML = `<img src="${s.logo}" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />`;
+            lgIcon.style.background = 'var(--surface2)';
+          } else {
+            lgIcon.innerHTML = '⛽';
+            lgIcon.style.background = '';
+          }
+        }
+
+        // Page title (browser tab)
+        try { document.title = name + ' — نظام الإدارة'; } catch(_){}
+      }
+
 
       // ═══════════════════════════════════════════════════
       // EXPORT
@@ -13319,6 +13844,15 @@
       // ═══════════════════════════════════════════════════
       // INIT
       // ═══════════════════════════════════════════════════
+
+      // Apply saved appearance (theme + font size) and branding BEFORE rendering
+      try {
+        const s0 = DB.settings || {};
+        applyTheme(s0.theme || 'light');
+        applyUiSize(s0.uiSize || 'mid');
+        applyBranding();
+      } catch(_) {}
+
       startClock();
       renderDashboard();
       updateLowStockBadge();
