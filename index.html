@@ -4080,6 +4080,10 @@
                     <label class="form-label">الرقم الضريبي</label
                     ><input type="text" class="form-input" id="sTax" />
                   </div>
+                  <div class="form-group">
+                    <label class="form-label">السجل التجاري</label
+                    ><input type="text" class="form-input" id="sCommercialReg" placeholder="مثال: 12345678" />
+                  </div>
                   <button class="btn btn-primary" onclick="saveSettings()">
                     💾 حفظ الإعدادات
                   </button>
@@ -4269,15 +4273,37 @@
             إضافة أصناف للفاتورة (تُضاف للمخزون تلقائياً)
           </h4>
           <div class="form-grid-3" style="align-items: end">
-            <div class="form-group">
+            <div class="form-group" style="position:relative;">
               <label class="form-label">الصنف</label>
-              <select
-                class="form-input form-select"
-                id="mcInvoiceProductSelect"
-                onchange="mcInvoiceProductChange()"
-              >
-                <!-- Populated dynamically -->
-              </select>
+              <!-- Hidden real value holder -->
+              <input type="hidden" id="mcInvoiceProductSelect" value="" />
+              <!-- Search input -->
+              <input
+                type="text"
+                class="form-input"
+                id="mcInvoiceProductSearch"
+                placeholder="🔍 ابحث عن صنف..."
+                autocomplete="off"
+                oninput="mcProductSearchInput()"
+                onfocus="mcProductSearchInput()"
+                onblur="setTimeout(()=>document.getElementById('mcProductDropdown').style.display='none',200)"
+                style="cursor:text;"
+              />
+              <!-- Dropdown list -->
+              <div id="mcProductDropdown" style="
+                display:none;
+                position:absolute;
+                top:100%;
+                right:0;left:0;
+                background:var(--surface);
+                border:1.5px solid var(--accent);
+                border-radius:8px;
+                box-shadow:var(--shadow-lg);
+                z-index:9999;
+                max-height:240px;
+                overflow-y:auto;
+                margin-top:2px;
+              "></div>
             </div>
             <div class="form-group">
               <label class="form-label">الكمية (العدد)</label>
@@ -4300,55 +4326,8 @@
             </div>
           </div>
 
-          <!-- حقول إضافة منتج جديد (تظهر فقط عند اختيار إضافة صنف جديد) -->
-          <div
-            id="mcInvoiceNewProductDiv"
-            style="
-              display: none;
-              background: var(--surface2);
-              padding: 12px;
-              border-radius: 8px;
-              margin-bottom: 14px;
-              border: 1px solid var(--border);
-            "
-          >
-            <div
-              style="font-size: 11px; color: var(--text3); margin-bottom: 8px"
-            >
-              إعدادات الصنف الجديد (سيتم إضافته للمخزن)
-            </div>
-            <div class="form-grid-3">
-              <div class="form-group" style="margin-bottom: 0">
-                <label class="form-label">اسم الصنف</label
-                ><input
-                  type="text"
-                  id="mciNewName"
-                  class="form-input"
-                  placeholder="اسم المنتج"
-                />
-              </div>
-              <div class="form-group" style="margin-bottom: 0">
-                <label class="form-label">الفئة</label>
-                <select id="mciNewCat" class="form-input form-select">
-                  <option>زيوت وسوائل</option>
-                  <option>إطارات</option>
-                  <option>إكسسوارات</option>
-                  <option>مشروبات</option>
-                  <option>أخرى</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin-bottom: 0">
-                <label class="form-label">سعر البيع المقترح (ج)</label
-                ><input
-                  type="number"
-                  id="mciNewSell"
-                  class="form-input"
-                  value="0"
-                  step="0.5"
-                />
-              </div>
-            </div>
-          </div>
+          <!-- stub for JS compat -->
+          <div id="mcInvoiceNewProductDiv" style="display:none;"></div>
 
           <button
             class="btn btn-secondary"
@@ -6043,7 +6022,7 @@
         const typeLabel = srentCurrentType === 'debit' ? 'إضافة للمديونية' : 'نقص من المديونية';
         toast(`✅ تم تسجيل ${typeLabel}: ${fN(amount)} ج — "${note}"`, 'success');
         renderSRentTab();
-        renderMCStatement();
+        renderMotherCompany();
       }
 
       function deleteSRentEntry(id) {
@@ -6058,7 +6037,7 @@
         saveDB();
         toast('🗑️ تم حذف الحركة بنجاح', 'success');
         renderSRentTab();
-        renderMCStatement();
+        renderMotherCompany();
       }
       // ─── END SHARED RENT ───
 
@@ -6174,6 +6153,9 @@
       }
 
       function renderMotherCompany() {
+        // sync إضافة/نقص tab stats if visible
+        if (typeof renderSRentTab === 'function') renderSRentTab();
+
         document.getElementById("mcAutoDeduct").checked =
           DB.motherCompany.autoDeductVisa;
 
@@ -6191,7 +6173,10 @@
           if (item.type === "invoice") {
             totalInvoicesAmt += item.amount;
             invoicesCount++;
-            if (item.details.payMethod === "آجل") {
+            // آجل OR sharedRent debit entries both add to debt
+            const isAjal = item.details?.payMethod === "آجل";
+            const isManualDebit = item.details?.source === 'sharedRent';
+            if (isAjal || isManualDebit) {
               currentDebt += item.amount;
             }
           } else if (item.type === "payment") {
@@ -6200,7 +6185,7 @@
           }
 
           let debit =
-            item.type === "invoice" && item.details.payMethod === "آجل"
+            (item.type === "invoice" && (item.details?.payMethod === "آجل" || item.details?.source === 'sharedRent'))
               ? item.amount
               : 0;
           let credit = item.type === "payment" ? item.amount : 0;
@@ -6253,7 +6238,7 @@
         <tr>
             <td style="font-size:12px; color:var(--text3);">${fDate(pay.date)}</td>
             <td style="font-family:var(--mono); color:var(--green); font-weight:700;">${fN(pay.amount)} ج</td>
-            <td><span class="tag tag-purple">${pay.details.method}</span></td>
+            <td><span class="tag tag-purple">${pay.details?.method || pay.details?.source === 'sharedRent' ? 'نقص يدوي' : '—'}</span></td>
             <td style="font-family:var(--mono);">${pay.ref || "—"}</td>
             <td>${pay.note || "—"}</td>
         </tr>`,
@@ -6313,88 +6298,124 @@
         document.getElementById("mciNote").value = "";
         document.getElementById("mciPayMethod").value = "آجل";
 
-        const sel = document.getElementById("mcInvoiceProductSelect");
-        sel.innerHTML =
-          '<option value="">-- اختر صنف --</option><option value="new" style="color:var(--accent);font-weight:bold;">+ إضافة صنف جديد...</option>' +
-          DB.products
-            .map(
-              (p) =>
-                `<option value="${p.id}">${p.name} (متوفر: ${fN(p.stock)})</option>`,
-            )
-            .join("");
+        // Reset search input
+        const searchEl = document.getElementById('mcInvoiceProductSearch');
+        const hiddenSel = document.getElementById('mcInvoiceProductSelect');
+        if (searchEl) { searchEl.value = ''; searchEl.placeholder = '🔍 ابحث عن صنف...'; searchEl.style.borderColor = ''; }
+        if (hiddenSel) hiddenSel.value = '';
+        const dd = document.getElementById('mcProductDropdown');
+        if (dd) dd.style.display = 'none';
 
         mcInvoiceProductChange();
         renderMCInvoiceItems();
         openModal("addMCInvoiceModal");
       }
 
+      // ── Searchable product dropdown logic ──
+      function mcProductSearchInput() {
+        const query = document.getElementById('mcInvoiceProductSearch').value.trim().toLowerCase();
+        const dd = document.getElementById('mcProductDropdown');
+        dd.innerHTML = '';
+        dd.style.display = 'block';
+
+        // Filter existing products
+        const matches = DB.products.filter(p => p.name.toLowerCase().includes(query));
+
+        matches.forEach(p => {
+          const item = document.createElement('div');
+          item.style.cssText = 'padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);font-size:13px;';
+          item.innerHTML = `<span>${p.name}</span><span style="color:var(--text3);font-family:var(--mono);font-size:11px;">متوفر: ${fN(p.stock)}</span>`;
+          item.addEventListener('mousedown', () => mcSelectProduct(p.id, p.name));
+          item.addEventListener('mouseover', () => item.style.background = 'var(--accent-dim)');
+          item.addEventListener('mouseout', () => item.style.background = '');
+          dd.appendChild(item);
+        });
+
+        // Always show "add new" option at bottom
+        const addBtn = document.createElement('div');
+        const isTypingNew = query && matches.length === 0;
+        addBtn.style.cssText = `padding:10px 14px;cursor:pointer;color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;${isTypingNew ? 'background:var(--accent-dim);' : ''}`;
+        addBtn.innerHTML = `<span style="font-size:16px">＋</span> إضافة صنف جديد${query ? ': "' + document.getElementById('mcInvoiceProductSearch').value.trim() + '"' : '...'}`;
+        addBtn.addEventListener('mousedown', () => mcSelectProduct('new', query ? document.getElementById('mcInvoiceProductSearch').value.trim() : ''));
+        addBtn.addEventListener('mouseover', () => addBtn.style.background = 'var(--accent-dim)');
+        addBtn.addEventListener('mouseout', () => addBtn.style.background = isTypingNew ? 'var(--accent-dim)' : '');
+        dd.appendChild(addBtn);
+
+        if (matches.length === 0 && !query) {
+          dd.innerHTML = '';
+          // Show all when no query
+          DB.products.forEach(p => {
+            const item = document.createElement('div');
+            item.style.cssText = 'padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);font-size:13px;';
+            item.innerHTML = `<span>${p.name}</span><span style="color:var(--text3);font-family:var(--mono);font-size:11px;">متوفر: ${fN(p.stock)}</span>`;
+            item.addEventListener('mousedown', () => mcSelectProduct(p.id, p.name));
+            item.addEventListener('mouseover', () => item.style.background = 'var(--accent-dim)');
+            item.addEventListener('mouseout', () => item.style.background = '');
+            dd.appendChild(item);
+          });
+          dd.appendChild(addBtn);
+        }
+      }
+
+      function mcSelectProduct(id, name) {
+        document.getElementById('mcProductDropdown').style.display = 'none';
+        if (id === 'new') {
+          // open the dedicated popup
+          openMciNewProductPopup(name || '');
+          // reset search box
+          document.getElementById('mcInvoiceProductSearch').value = '';
+          document.getElementById('mcInvoiceProductSearch').placeholder = '🔍 ابحث عن صنف...';
+          document.getElementById('mcInvoiceProductSelect').value = '';
+        } else {
+          document.getElementById('mcInvoiceProductSelect').value = id;
+          const searchEl = document.getElementById('mcInvoiceProductSearch');
+          searchEl.value = name;
+          searchEl.style.borderColor = 'var(--green)';
+          mcInvoiceProductChange();
+        }
+      }
+
       function mcInvoiceProductChange() {
         const val = document.getElementById("mcInvoiceProductSelect").value;
         const newDiv = document.getElementById("mcInvoiceNewProductDiv");
         const costInput = document.getElementById("mcInvoiceCost");
-
-        if (val === "new") {
-          newDiv.style.display = "block";
+        if (newDiv) newDiv.style.display = "none";
+        if (val && val !== "new") {
+          const p = DB.products.find((x) => x.id == val);
+          if (p) costInput.value = p.cost;
+        } else if (!val) {
           costInput.value = "";
-          document.getElementById("mciNewName").value = "";
-          document.getElementById("mciNewSell").value = "0";
-        } else {
-          newDiv.style.display = "none";
-          if (val) {
-            const p = DB.products.find((x) => x.id == val);
-            if (p) costInput.value = p.cost;
-          } else {
-            costInput.value = "";
-          }
         }
       }
 
       function addMCInvoiceItem() {
         const val = document.getElementById("mcInvoiceProductSelect").value;
-        const qty =
-          parseFloat(document.getElementById("mcInvoiceQty").value) || 0;
-        const cost =
-          parseFloat(document.getElementById("mcInvoiceCost").value) || 0;
+        const qty = parseFloat(document.getElementById("mcInvoiceQty").value) || 0;
+        const cost = parseFloat(document.getElementById("mcInvoiceCost").value) || 0;
 
-        if (!val || qty <= 0 || cost < 0)
-          return toast(
-            "يرجى إكمال بيانات الصنف (الكمية والسعر) بشكل صحيح",
-            "error",
-          );
+        if (!val || val === "new") return toast("يرجى اختيار صنف من القائمة أولاً", "error");
+        if (qty <= 0) return toast("يرجى إدخال كمية صحيحة", "error");
+        if (cost < 0) return toast("يرجى إدخال سعر شراء صحيح", "error");
 
-        if (val === "new") {
-          const name = document.getElementById("mciNewName").value.trim();
-          const cat = document.getElementById("mciNewCat").value;
-          const sell =
-            parseFloat(document.getElementById("mciNewSell").value) || 0;
-          if (!name) return toast("يرجى إدخال اسم الصنف الجديد", "error");
+        const p = DB.products.find((x) => x.id == val);
+        if (!p) return toast("الصنف غير موجود", "error");
 
-          mciCurrentItems.push({
-            isNew: true,
-            name: name,
-            cat: cat,
-            sell: sell,
-            qty: qty,
-            cost: cost,
-            total: qty * cost,
-          });
-        } else {
-          const p = DB.products.find((x) => x.id == val);
-          mciCurrentItems.push({
-            isNew: false,
-            id: p.id,
-            name: p.name,
-            qty: qty,
-            cost: cost,
-            total: qty * cost,
-          });
-        }
+        mciCurrentItems.push({
+          isNew: false,
+          id: p.id,
+          name: p.name,
+          qty: qty,
+          cost: cost,
+          total: qty * cost,
+        });
 
         document.getElementById("mcInvoiceProductSelect").value = "";
+        document.getElementById("mcInvoiceProductSearch").value = "";
+        document.getElementById("mcInvoiceProductSearch").style.borderColor = "";
+        document.getElementById("mcInvoiceProductSearch").placeholder = "🔍 ابحث عن صنف...";
         document.getElementById("mcInvoiceQty").value = "1";
         document.getElementById("mcInvoiceCost").value = "";
         mcInvoiceProductChange();
-
         renderMCInvoiceItems();
       }
 
@@ -10695,6 +10716,8 @@
         document.getElementById("sPhone").value = s.phone || "";
         document.getElementById("sCurrency").value = s.currency || "ج";
         document.getElementById("sTax").value = s.tax || "";
+        const crEl = document.getElementById("sCommercialReg");
+        if (crEl) crEl.value = s.commercialReg || "";
 
         // Logo preview
         settingsRenderLogoPreview();
@@ -10712,6 +10735,7 @@
           phone: document.getElementById("sPhone").value,
           currency: document.getElementById("sCurrency").value,
           tax: document.getElementById("sTax").value,
+          commercialReg: (document.getElementById("sCommercialReg") || {}).value || "",
           // Preserve appearance/logo (saved separately by their own handlers)
           logo: prev.logo || null,
           theme: prev.theme || 'light',
@@ -13857,6 +13881,175 @@
       renderDashboard();
       updateLowStockBadge();
       updateSidebarShiftPill();
+    </script>
+
+    <!-- ══════════ Popup: إضافة صنف جديد من فاتورة الشركة الأم ══════════ -->
+    <div id="mciNewProductPopupOverlay" style="
+      display:none;
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.55);
+      z-index:20000;
+      align-items:center;
+      justify-content:center;
+    " onclick="if(event.target===this)closeMciNewProductPopup()">
+      <div style="
+        background:var(--surface);
+        border-radius:16px;
+        width:420px;
+        max-width:95vw;
+        box-shadow:var(--shadow-lg);
+        border:1px solid var(--border);
+        overflow:hidden;
+        animation:slideUp .2s ease;
+      ">
+        <!-- Header -->
+        <div style="
+          background:var(--accent);
+          padding:16px 20px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+        ">
+          <span style="color:#fff;font-weight:700;font-size:14px;">📦 إضافة صنف جديد للمخزن</span>
+          <button onclick="closeMciNewProductPopup()" style="
+            background:rgba(255,255,255,0.2);
+            border:none;color:#fff;
+            width:28px;height:28px;border-radius:50%;
+            cursor:pointer;font-size:15px;line-height:1;
+          ">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+
+          <!-- اسم الصنف -->
+          <div class="form-group" style="margin:0">
+            <label class="form-label">اسم الصنف <span style="color:var(--red)">*</span></label>
+            <input type="text" id="mciNewName" class="form-input"
+              placeholder="مثال: زيت موتور 5w30"
+              oninput="this.style.borderColor=this.value.trim()?'var(--green)':'var(--red)'" />
+          </div>
+
+          <!-- الكمية + سعر الشراء (مطلوبين) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group" style="margin:0">
+              <label class="form-label">الكمية <span style="color:var(--red)">*</span></label>
+              <input type="number" id="mciNewQty" class="form-input"
+                min="0.5" step="0.5" placeholder="0" value="" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">سعر الشراء (ج) <span style="color:var(--red)">*</span></label>
+              <input type="number" id="mciNewCost" class="form-input"
+                min="0" step="0.5" placeholder="0.00" value="" />
+            </div>
+          </div>
+
+          <!-- سعر البيع (اختياري) -->
+          <div class="form-group" style="margin:0">
+            <label class="form-label">
+              سعر البيع (ج)
+              <span style="color:var(--text3);font-size:11px;font-weight:400;"> — اختياري</span>
+            </label>
+            <input type="number" id="mciNewSell" class="form-input"
+              min="0" step="0.5" placeholder="اتركه فارغ لو مش محدد" value="" />
+          </div>
+
+          <!-- الفئة -->
+          <div class="form-group" style="margin:0">
+            <label class="form-label">الفئة</label>
+            <select id="mciNewCat" class="form-input form-select">
+              <option>زيوت وسوائل</option>
+              <option>إطارات</option>
+              <option>إكسسوارات</option>
+              <option>مشروبات</option>
+              <option>أخرى</option>
+            </select>
+          </div>
+
+          <!-- ملاحظة -->
+          <p style="
+            margin:0;font-size:11px;
+            color:var(--text3);
+            background:var(--surface2);
+            padding:8px 12px;border-radius:6px;
+            border-right:3px solid var(--accent);
+          ">سيتم إضافة هذا الصنف تلقائياً للمخزن عند حفظ الفاتورة</p>
+
+          <!-- Buttons -->
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button onclick="confirmMciNewProduct()" style="
+              flex:1;padding:11px;border:none;border-radius:8px;
+              background:var(--accent);color:#fff;
+              font-weight:700;font-size:13px;cursor:pointer;
+              font-family:var(--font);
+            ">✅ إضافة الصنف للفاتورة</button>
+            <button onclick="closeMciNewProductPopup()" style="
+              padding:11px 18px;border:1px solid var(--border);border-radius:8px;
+              background:var(--surface2);color:var(--text2);
+              font-weight:600;font-size:13px;cursor:pointer;
+              font-family:var(--font);
+            ">إلغاء</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openMciNewProductPopup(prefillName) {
+        document.getElementById('mciNewName').value = prefillName || '';
+        document.getElementById('mciNewName').style.borderColor = prefillName ? 'var(--green)' : '';
+        document.getElementById('mciNewQty').value = document.getElementById('mcInvoiceQty').value || '1';
+        document.getElementById('mciNewCost').value = document.getElementById('mcInvoiceCost').value || '';
+        document.getElementById('mciNewSell').value = '';
+        document.getElementById('mciNewCat').value = 'أخرى';
+        const overlay = document.getElementById('mciNewProductPopupOverlay');
+        overlay.style.display = 'flex';
+        setTimeout(() => document.getElementById('mciNewName').focus(), 80);
+      }
+
+      function closeMciNewProductPopup() {
+        document.getElementById('mciNewProductPopupOverlay').style.display = 'none';
+        // clear the "new" selection so search box resets
+        document.getElementById('mcInvoiceProductSelect').value = '';
+        document.getElementById('mcInvoiceProductSearch').value = '';
+        document.getElementById('mcInvoiceProductSearch').style.borderColor = '';
+        document.getElementById('mcInvoiceProductSearch').placeholder = '🔍 ابحث عن صنف...';
+      }
+
+      function confirmMciNewProduct() {
+        const name = document.getElementById('mciNewName').value.trim();
+        const qty  = parseFloat(document.getElementById('mciNewQty').value)  || 0;
+        const cost = parseFloat(document.getElementById('mciNewCost').value);
+        const sell = parseFloat(document.getElementById('mciNewSell').value) || 0;
+        const cat  = document.getElementById('mciNewCat').value;
+
+        if (!name) {
+          document.getElementById('mciNewName').style.borderColor = 'var(--red)';
+          document.getElementById('mciNewName').focus();
+          return toast('يرجى إدخال اسم الصنف', 'error');
+        }
+        if (qty <= 0)  return toast('يرجى إدخال الكمية', 'error');
+        if (isNaN(cost) || cost < 0) return toast('يرجى إدخال سعر الشراء', 'error');
+
+        mciCurrentItems.push({
+          isNew: true,
+          name, cat, sell, qty, cost,
+          total: qty * cost,
+        });
+
+        document.getElementById('mciNewProductPopupOverlay').style.display = 'none';
+
+        // reset the search row
+        document.getElementById('mcInvoiceProductSelect').value = '';
+        document.getElementById('mcInvoiceProductSearch').value = '';
+        document.getElementById('mcInvoiceProductSearch').style.borderColor = '';
+        document.getElementById('mcInvoiceProductSearch').placeholder = '🔍 ابحث عن صنف...';
+        document.getElementById('mcInvoiceQty').value = '1';
+        document.getElementById('mcInvoiceCost').value = '';
+
+        renderMCInvoiceItems();
+        toast(`✅ تمت إضافة "${name}" للفاتورة`, 'success');
+      }
     </script>
   </body>
 </html>
