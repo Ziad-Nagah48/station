@@ -3496,7 +3496,7 @@
             <div class="report-card" onclick="goPage('supply-inventory-report', null)" style="border:1px solid rgba(245,158,11,0.4);background:rgba(245,158,11,0.06);">
               <div class="report-icon">🛢️</div>
               <div class="report-title" style="color:var(--amber);">جرد التموين</div>
-              <div class="report-desc">التصريف الفعلي = رصيد أول المدة + الوارد − رصيد آخر المدة ومقارنته بقراءات المسدسات</div>
+              <div class="report-desc">الكمية المباعة من التنك = رصيد أول المدة + الوارد − رصيد آخر المدة ومقارنتها بقراءات المسدسات</div>
             </div>
           </div>
         </div>
@@ -3726,7 +3726,7 @@
             </button>
             <div>
               <div style="font-size:17px;font-weight:800;">🛢️ جرد التموين</div>
-              <div style="font-size:12px;color:var(--text3);">التصريف الفعلي = رصيد أول المدة + الوارد − رصيد آخر المدة</div>
+              <div style="font-size:12px;color:var(--text3);">الكمية المباعة من التنك = رصيد أول المدة + الوارد − رصيد آخر المدة</div>
             </div>
             <div class="spacer"></div>
             <button class="btn btn-sm btn-primary" onclick="window.print()">🖨️ طباعة</button>
@@ -5464,7 +5464,7 @@
         function tick() {
           const now = new Date();
           document.getElementById("timeChip").textContent =
-            now.toLocaleTimeString("ar-EG");
+            now.toLocaleTimeString("en-US");
         }
         tick();
         setInterval(tick, 1000);
@@ -8328,7 +8328,7 @@
               let color = isPayment ? "var(--green)" : "var(--red)";
 
               return `<tr>
-      <td style="font-size:12px;color:var(--text3)">${fDate(t.date)} ${new Date(t.date).toLocaleTimeString("ar-EG")}</td>
+      <td style="font-size:12px;color:var(--text3)">${fDate(t.date)} ${new Date(t.date).toLocaleTimeString("en-US")}</td>
       <td>${typeTag}</td>
       <td style="font-family:var(--mono); color:${color}; font-weight:bold;">${fN(t.amount)} ج</td>
       <td>${t.note || "—"}</td>
@@ -8583,7 +8583,7 @@
             const fp = f.rev - f.cost;
             return `<tr>
               <td style="font-weight:700">⛽ ${f.name}</td>
-              <td style="font-family:var(--mono)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
+              <td style="font-family:var(--mono)">${f.liters.toLocaleString('en-US',{maximumFractionDigits:0})} ل</td>
               <td style="font-family:var(--mono);color:var(--accent2)">${fN(f.rev)} ج</td>
               <td style="font-family:var(--mono);color:var(--text2)">${fN(f.cost)} ج</td>
               <td style="font-family:var(--mono);font-weight:800;color:${fp>=0?'var(--green)':'var(--red)'}">${fN(fp)} ج</td>
@@ -8774,7 +8774,7 @@
             return `<tr>
               <td style="font-weight:700">خزان ${i+1}</td>
               <td>${f.name}</td>
-              <td style="font-family:var(--mono);font-weight:800;color:var(--accent2)">${stock.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
+              <td style="font-family:var(--mono);font-weight:800;color:var(--accent2)">${stock.toLocaleString('en-US',{maximumFractionDigits:0})} ل</td>
               <td>
                 <div style="display:flex;align-items:center;gap:8px">
                   <div style="flex:1;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden">
@@ -8813,7 +8813,7 @@
 
           const fuelSaleRows = Object.values(fuelSalesMap).map(f=>`<tr>
             <td style="font-weight:700">⛽ ${f.name}</td>
-            <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
+            <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${f.liters.toLocaleString('en-US',{maximumFractionDigits:0})} ل</td>
             <td style="font-family:var(--mono);font-weight:700;color:var(--green)">${fN(f.value)} ج</td>
           </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:12px;color:var(--text3)">لا توجد مبيعات في هذه الفترة</td></tr>';
 
@@ -8852,7 +8852,7 @@
               <div style="background:#eff6ff;border:2px solid #bfdbfe;border-radius:14px;padding:16px;text-align:center">
                 <div style="font-size:11px;color:#6b7280;margin-bottom:6px">📊 إجمالي بيع الوقود</div>
                 <div style="font-size:22px;font-weight:900;color:#1d4ed8;font-family:var(--mono)">${fN(totalFuelSoldValue)}</div>
-                <div style="font-size:10px;color:#9ca3af">${totalFuelSoldLiters.toLocaleString('ar-EG',{maximumFractionDigits:0})} لتر</div>
+                <div style="font-size:10px;color:#9ca3af">${totalFuelSoldLiters.toLocaleString('en-US',{maximumFractionDigits:0})} لتر</div>
               </div>
               <div style="background:#1e293b;border:2px solid #334155;border-radius:14px;padding:16px;text-align:center">
                 <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">🏢 قيمة البضاعة الكلية</div>
@@ -8905,7 +8905,7 @@
                   <tbody>${fuelSaleRows}
                     <tr style="background:var(--surface2);font-weight:800">
                       <td>الإجمالي</td>
-                      <td style="font-family:var(--mono);font-weight:900;color:var(--accent2)">${totalFuelSoldLiters.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</td>
+                      <td style="font-family:var(--mono);font-weight:900;color:var(--accent2)">${totalFuelSoldLiters.toLocaleString('en-US',{maximumFractionDigits:0})} ل</td>
                       <td style="font-family:var(--mono);font-weight:900;color:var(--green)">${fN(totalFuelSoldValue)} ج</td>
                     </tr>
                   </tbody>
@@ -9009,11 +9009,11 @@
               <td style="text-align:center">
                 <span style="background:${rate===0?'var(--surface2)':rate<0.1?'var(--green-dim)':rate<0.3?'var(--amber-dim)':'var(--red-dim)'};color:${rateColor};border:1px solid ${rate===0?'var(--border)':rate<0.1?'rgba(16,185,129,.3)':rate<0.3?'rgba(245,158,11,.3)':'rgba(239,68,68,.3)'};padding:3px 10px;border-radius:20px;font-family:var(--mono);font-weight:700;font-size:13px">${rate}%</span>
               </td>
-              <td style="font-family:var(--mono);color:var(--text2)">${stock.toLocaleString('ar-EG', {maximumFractionDigits: 0})} ل</td>
-              <td style="font-family:var(--mono);font-weight:700;color:var(--amber)">${evapLiters.toLocaleString('ar-EG', {minimumFractionDigits:1,maximumFractionDigits:1})} ل</td>
+              <td style="font-family:var(--mono);color:var(--text2)">${stock.toLocaleString('en-US', {maximumFractionDigits: 0})} ل</td>
+              <td style="font-family:var(--mono);font-weight:700;color:var(--amber)">${evapLiters.toLocaleString('en-US', {minimumFractionDigits:1,maximumFractionDigits:1})} ل</td>
               <td style="font-family:var(--mono);font-weight:800;color:var(--red)">${fN(evapValue)} ج</td>
               <td style="font-family:var(--mono);color:${actualEvapLiters==null?'var(--text3)':actualEvapLiters>evapLiters*1.5?'var(--red)':actualEvapLiters>0?'var(--amber)':'var(--green)'}">
-                ${actualEvapLiters != null ? actualEvapLiters.toLocaleString('ar-EG',{minimumFractionDigits:1,maximumFractionDigits:1})+' ل' : '— (لا توجد قراءات كافية)'}
+                ${actualEvapLiters != null ? actualEvapLiters.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+' ل' : '— (لا توجد قراءات كافية)'}
               </td>
             </tr>`;
           }).join('');
@@ -9060,7 +9060,7 @@
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px">
               <div style="background:var(--purple-dim);border:2px solid rgba(139,92,246,.3);border-radius:14px;padding:16px;text-align:center">
                 <div style="font-size:11px;color:var(--text3);margin-bottom:6px">💨 إجمالي البخر النظري</div>
-                <div style="font-size:24px;font-weight:900;color:var(--purple);font-family:var(--mono)">${totalEvapLiters.toLocaleString('ar-EG',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
+                <div style="font-size:24px;font-weight:900;color:var(--purple);font-family:var(--mono)">${totalEvapLiters.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
                 <div style="font-size:10px;color:var(--text3)">لتر خلال ${days} يوم</div>
               </div>
               <div style="background:var(--red-dim);border:2px solid rgba(239,68,68,.3);border-radius:14px;padding:16px;text-align:center">
@@ -9305,7 +9305,7 @@
         // ── بناء صفوف جدول الوقود المجمّع ──
         const fuelTypeRowsSales = Object.values(fuelByTypeSales).map(f=>`<tr>
           <td><span style="font-size:18px;">⛽</span> <strong>${f.name}</strong></td>
-          <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${f.liters.toLocaleString('ar-EG',{maximumFractionDigits:2})} لتر</td>
+          <td style="font-family:var(--mono);font-weight:700;color:var(--accent2)">${f.liters.toLocaleString('en-US',{maximumFractionDigits:2})} لتر</td>
           <td style="font-family:var(--mono);color:var(--text2)">${fN(f.price)} ج/ل</td>
           <td style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:14px">${fN(f.rev)} ج</td>
         </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3)">لا توجد مبيعات وقود في هذه الفترة</td></tr>';
@@ -9331,7 +9331,7 @@
             </div>
             <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;text-align:center">
               <div style="font-size:11px;color:var(--text3)">⛽ إجمالي لترات الوقود</div>
-              <div style="font-size:20px;font-weight:800;color:var(--amber);font-family:var(--mono)">${totalFuelLitersSales.toLocaleString('ar-EG',{maximumFractionDigits:0})} ل</div>
+              <div style="font-size:20px;font-weight:800;color:var(--amber);font-family:var(--mono)">${totalFuelLitersSales.toLocaleString('en-US',{maximumFractionDigits:0})} ل</div>
             </div>
             <div style="background:var(--purple-dim);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:14px;text-align:center">
               <div style="font-size:11px;color:var(--text3)">📦 إيراد المنتجات</div>
@@ -9359,7 +9359,7 @@
                   ${fuelTypeRowsSales}
                   <tr style="background:var(--amber-dim);font-weight:900;border-top:2px solid rgba(245,158,11,.3)">
                     <td style="font-size:13px;font-weight:800">⛽ إجمالي الوقود</td>
-                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber)">${totalFuelLitersSales.toLocaleString('ar-EG',{maximumFractionDigits:0})} لتر</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber)">${totalFuelLitersSales.toLocaleString('en-US',{maximumFractionDigits:0})} لتر</td>
                     <td>—</td>
                     <td style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:15px">${fN(totalFuelRevSales)} ج</td>
                   </tr>
@@ -11386,7 +11386,7 @@
           </div>
           <div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:16px;text-align:center;">
             <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⛽ إجمالي اللترات</div>
-            <div style="font-size:22px;font-weight:900;color:var(--amber);font-family:var(--mono);">${totalLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})}</div>
+            <div style="font-size:22px;font-weight:900;color:var(--amber);font-family:var(--mono);">${totalLiters.toLocaleString('en-US',{maximumFractionDigits:1})}</div>
             <div style="font-size:11px;color:var(--text3);margin-top:2px;">لتر</div>
           </div>
           <div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.3);border-radius:14px;padding:16px;text-align:center;">
@@ -11436,16 +11436,16 @@
               </span>
             </td>
             <td style="font-family:var(--mono);color:var(--text2);text-align:center;font-size:12px;">
-              ${n.firstStart.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+              ${n.firstStart.toLocaleString('en-US',{maximumFractionDigits:2})}
             </td>
             <td style="font-family:var(--mono);color:var(--accent2);font-weight:700;text-align:center;font-size:12px;">
-              ${n.lastEnd.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+              ${n.lastEnd.toLocaleString('en-US',{maximumFractionDigits:2})}
             </td>
             <td style="font-family:var(--mono);font-weight:800;color:var(--purple);text-align:center;font-size:12px;">
-              ${n.currentCounter.toLocaleString('ar-EG',{maximumFractionDigits:2})}
+              ${n.currentCounter.toLocaleString('en-US',{maximumFractionDigits:2})}
             </td>
             <td style="font-family:var(--mono);font-weight:700;color:var(--amber);text-align:center;">
-              ${n.liters.toLocaleString('ar-EG',{maximumFractionDigits:2})} لتر
+              ${n.liters.toLocaleString('en-US',{maximumFractionDigits:2})} لتر
             </td>
             <td style="font-family:var(--mono);font-weight:800;color:var(--green);font-size:13px;text-align:center;">
               ${fN(n.value)} ج
@@ -11476,7 +11476,7 @@
                   </div>
                 </div>
                 <div style="text-align:center;min-width:80px;">
-                  <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${n.liters.toLocaleString('ar-EG',{maximumFractionDigits:1})} ل</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${n.liters.toLocaleString('en-US',{maximumFractionDigits:1})} ل</div>
                   <div style="font-size:10px;color:var(--text3);">اللترات</div>
                 </div>
                 <div style="text-align:center;min-width:95px;">
@@ -11494,15 +11494,15 @@
               <div style="display:flex;gap:0;border-top:1px dashed var(--border);background:var(--surface2);">
                 <div style="flex:1;text-align:center;padding:7px 4px;border-left:1px solid var(--border);">
                   <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">قراءة البداية</div>
-                  <div style="font-family:var(--mono);font-weight:700;color:var(--text2);font-size:12px;">${n.firstStart.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--text2);font-size:12px;">${n.firstStart.toLocaleString('en-US',{maximumFractionDigits:2})}</div>
                 </div>
                 <div style="flex:1;text-align:center;padding:7px 4px;border-left:1px solid var(--border);">
                   <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">قراءة النهاية</div>
-                  <div style="font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:12px;">${n.lastEnd.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                  <div style="font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:12px;">${n.lastEnd.toLocaleString('en-US',{maximumFractionDigits:2})}</div>
                 </div>
                 <div style="flex:1;text-align:center;padding:7px 4px;">
                   <div style="font-size:10px;color:var(--text3);margin-bottom:2px;">العداد الحالي</div>
-                  <div style="font-family:var(--mono);font-weight:800;color:var(--purple);font-size:12px;">${n.currentCounter.toLocaleString('ar-EG',{maximumFractionDigits:2})}</div>
+                  <div style="font-family:var(--mono);font-weight:800;color:var(--purple);font-size:12px;">${n.currentCounter.toLocaleString('en-US',{maximumFractionDigits:2})}</div>
                 </div>
               </div>
             </div>`).join('');
@@ -11516,7 +11516,7 @@
                 <div style="display:flex;gap:16px;align-items:center;">
                   <div style="text-align:center;">
                     <div style="font-size:10px;color:var(--text3);">اللترات</div>
-                    <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${pumpLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})} ل</div>
+                    <div style="font-family:var(--mono);font-weight:700;color:var(--amber);font-size:13px;">${pumpLiters.toLocaleString('en-US',{maximumFractionDigits:1})} ل</div>
                   </div>
                   <div style="text-align:center;">
                     <div style="font-size:10px;color:var(--text3);">الإجمالي</div>
@@ -11563,7 +11563,7 @@
                     <td style="text-align:center;color:var(--text3);">—</td>
                     <td style="text-align:center;color:var(--text3);">—</td>
                     <td style="text-align:center;color:var(--text3);">—</td>
-                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber);text-align:center;">${totalLiters.toLocaleString('ar-EG',{maximumFractionDigits:1})} لتر</td>
+                    <td style="font-family:var(--mono);font-weight:900;color:var(--amber);text-align:center;">${totalLiters.toLocaleString('en-US',{maximumFractionDigits:1})} لتر</td>
                     <td style="font-family:var(--mono);font-weight:900;color:var(--green);font-size:15px;text-align:center;">${fN(totalValue)} ج</td>
                     <td style="text-align:center;">${totalShifts}</td>
                     <td>100%</td>
@@ -11583,6 +11583,7 @@
       // ══════════════════════════════════════════════════════
 
       const siOpeningBalances = {}; // fallback يدوي لو مفيش قراءة صباحية
+      const siClosingBalances = {}; // إدخال يدوي لرصيد آخر المدة (اختياري)
 
       function siResetFilter() {
         const now = new Date();
@@ -11600,11 +11601,11 @@
         renderSupplyInventoryReport();
       }
 
-      // رصيد أول المدة: قراءة يوم البداية بالظبط، لو مفيش → أقرب يوم بعده
+      // رصيد أول المدة: قراءة يوم البداية بالظبط، لو مفيش → أقرب يوم قبله
       function getOpeningFromMorningReadings(fuelId, fromDate) {
         const readings = (DB.morningReadings || [])
-          .filter(function(r){ return r.date >= fromDate; })
-          .sort(function(a,b){ return a.date.localeCompare(b.date); }); // تصاعدي — الأقرب للبداية أولاً
+          .filter(function(r){ return r.date <= fromDate; })
+          .sort(function(a,b){ return b.date.localeCompare(a.date); }); // تنازلي — الأقرب للبداية من قبلها أولاً
         for (var i = 0; i < readings.length; i++) {
           var tank = readings[i].tanks.find(function(t){ return t.fuelId == fuelId; });
           if (tank && tank.reading !== null && tank.reading !== undefined) {
@@ -11644,11 +11645,18 @@
           return;
         }
 
+        // دالة مقارنة تواريخ آمنة (تتجاهل الوقت)
+        function dateInRange(dateStr, fromStr, toStr) {
+          if (!dateStr) return false;
+          const d = dateStr.slice(0,10);
+          return d >= fromStr && d <= toStr;
+        }
+
         // الوارد (التوريدات) لكل نوع وقود في الفترة
         const suppliesMap = {};
         (DB.fuelSupplies || []).forEach(function(s) {
           const d = s.date ? s.date.slice(0,10) : '';
-          if (d >= from && d <= to) {
+          if (dateInRange(d, from, to)) {
             suppliesMap[s.fuelId] = (suppliesMap[s.fuelId] || 0) + (s.qty || 0);
           }
         });
@@ -11657,8 +11665,9 @@
         const nozzleSalesMap = {};
         (DB.shiftEntries || []).filter(function(e) {
           if (e.status !== 'closed') return false;
-          const d = e.endTime ? e.endTime.slice(0,10) : '';
-          return d >= from && d <= to;
+          // نعتمد على endTime أو startTime، ونقارن بشكل آمن
+          const d = e.endTime ? e.endTime.slice(0,10) : (e.startTime ? e.startTime.slice(0,10) : '');
+          return dateInRange(d, from, to);
         }).forEach(function(e) {
           const pump = (DB.pumps||[]).find(function(p){ return p.id === e.pumpId; });
           if (!pump || !pump.nozzles) return;
@@ -11684,9 +11693,21 @@
           const supplied     = suppliesMap[f.id] || 0;
           const nozzleSales  = nozzleSalesMap[f.id] || 0;
 
-          // رصيد آخر المدة: من القراءة الصباحية الأقرب لآخر الفترة، أو الرصيد الحالي كـ fallback
-          const closingBalance = closingInfo ? closingInfo.reading : (f.stock || 0);
-          const closingSource  = closingInfo ? ('قراءة ' + closingInfo.date) : 'الرصيد الحالي';
+          // رصيد آخر المدة: يدوي إن وُجد → ثم قراءة صباحية → ثم الرصيد الحالي
+          var closingBalance, closingSource, closingAuto = false, closingManual = false;
+          const manualClosing = siClosingBalances[f.id];
+          if (manualClosing !== undefined && manualClosing !== null && manualClosing !== '') {
+            closingBalance = parseFloat(manualClosing) || 0;
+            closingSource  = 'يدوي ✏️';
+            closingManual  = true;
+          } else if (closingInfo) {
+            closingBalance = closingInfo.reading;
+            closingSource  = 'قراءة ' + closingInfo.date;
+            closingAuto    = true;
+          } else {
+            closingBalance = f.stock || 0;
+            closingSource  = 'الرصيد الحالي';
+          }
 
           // رصيد أول المدة: من أقرب قراءة قبل البداية، أو يدوي
           var openingBalance;
@@ -11701,8 +11722,8 @@
             openingSource  = 'يدوي';
           }
 
-          const dispatch   = openingBalance + supplied - closingBalance;
-          const diff       = dispatch - nozzleSales;
+          const tankSales  = openingBalance + supplied - closingBalance;  // الكمية المباعة من التنك
+          const diff       = tankSales - nozzleSales;
 
           fuelData.push({
             f: f,
@@ -11712,14 +11733,16 @@
             supplied: supplied,
             closingBalance: closingBalance,
             closingSource: closingSource,
+            closingAuto: closingAuto,
+            closingManual: closingManual,
             nozzleSales: nozzleSales,
-            dispatch: dispatch,
+            tankSales: tankSales,
             diff: diff
           });
 
           totalOpening  += openingBalance;
           totalSupplied += supplied;
-          totalDispatch += dispatch;
+          totalDispatch += tankSales;
           totalNozzles  += nozzleSales;
           totalClosing  += closingBalance;
           totalDiff     += diff;
@@ -11731,12 +11754,31 @@
               ? '<div style="font-size:11px;color:var(--green);margin-bottom:6px;">✅ من القياس الصباحي (' + openingInfo.date + ')</div>'
                 + '<div style="font-family:var(--mono);font-size:16px;font-weight:900;color:var(--green)">' + fN(openingBalance) + ' ل</div>'
               : '<div style="font-size:11px;color:var(--amber);margin-bottom:4px;">⚠️ لا توجد قراءة صباحية — أدخل يدوياً:</div>'
-                + '<input type="number" class="form-input" id="siOpen_' + f.id + '" placeholder="رصيد أول المدة (لتر)" value="' + (siOpeningBalances[f.id] || '') + '" min="0" oninput="siOpeningBalances[' + f.id + ']=parseFloat(this.value)||0;renderSupplyInventoryReport();" style="font-family:var(--mono);">'
+                + '<input type="number" class="form-input" id="siOpen_' + f.id + '" placeholder="رصيد أول المدة (لتر)" value="' + (siOpeningBalances[f.id] || '') + '" min="0" onchange="siOpeningBalances[' + f.id + ']=parseFloat(this.value)||0;renderSupplyInventoryReport();" style="font-family:var(--mono);">'
             )
             + '</div>';
         });
         openingHtml += '</div>';
-        document.getElementById('siOpeningInputs').innerHTML = openingHtml;
+
+        // ── قسم رصيد آخر المدة (اختياري يدوي) ──
+        let closingHtml = '<div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:14px;">'
+          + '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;">رصيد آخر المدة — إدخال يدوي (اختياري):</div>'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">لو عندك قراءة فعلية في آخر الفترة، اكتبها هنا وهتاخد أولوية على القراءة الصباحية والرصيد الحالي.</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">';
+        fuels.forEach(function(f) {
+          const manualVal = siClosingBalances[f.id] !== undefined ? siClosingBalances[f.id] : '';
+          closingHtml += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">'
+            + '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;">' + (f.icon||'⛽') + ' ' + f.name + '</div>'
+            + '<input type="number" class="form-input" id="siClose_' + f.id + '"'
+            + ' placeholder="اتركه فارغ للتلقائي" min="0" value="' + manualVal + '"'
+            + ' style="font-family:var(--mono);"'
+            + ' onchange="var v=this.value.trim();if(v===\'\'){delete siClosingBalances[' + f.id + '];}else{siClosingBalances[' + f.id + ']=parseFloat(v)||0;}renderSupplyInventoryReport();">'
+            + (manualVal !== '' ? '<div style="font-size:10px;color:var(--accent);margin-top:4px;">✏️ مُدخل يدوياً</div>' : '')
+            + '</div>';
+        });
+        closingHtml += '</div></div>';
+
+        document.getElementById('siOpeningInputs').innerHTML = openingHtml + closingHtml;
 
         // بطاقات الملخص
         const totalDiffColor = totalDiff > 50 ? 'var(--red)' : totalDiff < -50 ? 'var(--green)' : 'var(--text3)';
@@ -11756,7 +11798,7 @@
           + '<div style="font-size:10px;color:var(--text3)">لتر</div></div>'
 
           + '<div style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:16px;text-align:center;">'
-          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⛽ التصريف الفعلي</div>'
+          + '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">⛽ الكمية المباعة من التنك</div>'
           + '<div style="font-size:22px;font-weight:900;color:var(--amber);font-family:var(--mono)">' + fN(totalDispatch) + '</div>'
           + '<div style="font-size:10px;color:var(--text3)">لتر</div></div>'
 
@@ -11776,10 +11818,10 @@
             + '<td style="font-family:var(--mono);color:var(--accent2)">' + fN(d.openingBalance) + ' ل'
               + '<div style="font-size:10px;color:' + (d.openingAuto ? 'var(--green)' : 'var(--amber)') + ';margin-top:2px;">' + d.openingSource + '</div></td>'
             + '<td style="font-family:var(--mono);color:var(--green)">' + fN(d.supplied) + ' ل</td>'
-            + '<td style="font-family:var(--mono);font-weight:800;color:var(--amber)">' + fN(d.dispatch) + ' ل</td>'
+            + '<td style="font-family:var(--mono);font-weight:800;color:var(--amber)">' + fN(d.tankSales) + ' ل</td>'
             + '<td style="font-family:var(--mono);color:var(--purple)">' + fN(d.nozzleSales) + ' ل</td>'
-            + '<td style="font-family:var(--mono);color:var(--text3)">' + fN(d.closingBalance) + ' ل'
-              + '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + d.closingSource + '</div></td>'
+            + '<td style="font-family:var(--mono);color:' + (d.closingManual ? 'var(--accent)' : 'var(--text3)') + '">' + fN(d.closingBalance) + ' ل'
+              + '<div style="font-size:10px;color:' + (d.closingManual ? 'var(--accent)' : (d.closingAuto ? 'var(--green)' : 'var(--text3)')) + ';margin-top:2px;">' + d.closingSource + '</div></td>'
             + '<td style="font-family:var(--mono);font-weight:800;color:' + diffColor + '">' + diffLabel + '</td>'
             + '</tr>';
         }).join('');
@@ -11791,7 +11833,7 @@
           + '</div>'
           + '<div style="overflow-x:auto;"><table class="tbl"><thead><tr>'
           + '<th>نوع الوقود</th><th>رصيد أول المدة</th><th>الوارد</th>'
-          + '<th>التصريف الفعلي</th><th>قراءات المسدسات</th><th>رصيد آخر المدة</th><th>الفرق</th>'
+          + '<th>الكمية المباعة من التنك</th><th>قراءات المسدسات</th><th>رصيد آخر المدة</th><th>الفرق</th>'
           + '</tr></thead><tbody>' + rows
           + '<tr style="background:var(--surface3);font-weight:900;border-top:2px solid var(--border2);">'
           + '<td>الإجمالي</td>'
@@ -11806,12 +11848,12 @@
           + '<div class="card"><div class="card-header">📐 شرح طريقة الحساب</div>'
           + '<div class="card-body" style="font-size:13px;line-height:2.2;color:var(--text2);">'
           + '<div style="background:var(--accent-dim);border:1px solid rgba(14,165,233,.2);border-radius:10px;padding:14px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:12px;text-align:center;">'
-          + 'التصريف الفعلي = رصيد أول المدة + إجمالي الوارد − رصيد آخر المدة</div>'
-          + '<div><strong>✅ رصيد أول المدة:</strong> يُجلب تلقائياً من أقرب قراءة صباحية قبل تاريخ البداية. لو مفيش قراءة → بتدخله يدوياً.</div>'
-          + '<div><strong>✅ رصيد آخر المدة:</strong> يُجلب من أقرب قراءة صباحية في نهاية الفترة. لو مفيش → الرصيد الحالي في النظام.</div>'
-          + '<div><strong>🚛 الوارد:</strong> إجمالي التورديات المسجلة في النظام خلال الفترة.</div>'
+          + 'الكمية المباعة من التنك = رصيد أول المدة + إجمالي الوارد − رصيد آخر المدة</div>'
+          + '<div><strong>✅ رصيد أول المدة:</strong> يُجلب تلقائياً من أقرب قراءة صباحية في تاريخ البداية أو بعده. لو مفيش قراءة → بتدخله يدوياً.</div>'
+          + '<div><strong>✅ رصيد آخر المدة:</strong> يُجلب من أقرب قراءة صباحية في نهاية الفترة أو قبلها. لو مفيش قراءة → الرصيد الحالي. يمكنك تجاوز ده بالإدخال اليدوي.</div>'
+          + '<div><strong>🚛 الوارد:</strong> إجمالي التوريدات المسجلة في النظام خلال الفترة.</div>'
           + '<div><strong>🔫 قراءات المسدسات:</strong> مجموع ما سجلته عدادات الطلمبات من مبيعات.</div>'
-          + '<div><strong>⚖️ الفرق:</strong> عجز لو التصريف أكبر من المسدسات، زيادة لو أصغر (طبيعي بسبب البخر).</div>'
+          + '<div><strong>⚖️ الفرق:</strong> عجز لو الكمية المباعة من التنك أكبر من المسدسات، زيادة لو أصغر (طبيعي بسبب البخر).</div>'
           + '</div></div>';
       }
 
@@ -13516,14 +13558,14 @@
       // HELPERS
       // ═══════════════════════════════════════════════════
       function fN(n) {
-        return (parseFloat(n) || 0).toLocaleString("ar-EG", {
+        return (parseFloat(n) || 0).toLocaleString("en-US", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
       }
       function fDate(d) {
         return d
-          ? new Date(d).toLocaleDateString("ar-EG", {
+          ? new Date(d).toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
@@ -13532,7 +13574,7 @@
       }
       function fDateTime(d) {
         return d
-          ? new Date(d).toLocaleString("ar-EG", {
+          ? new Date(d).toLocaleString("en-GB", {
               day: "2-digit",
               month: "2-digit",
               hour: "2-digit",
